@@ -1,0 +1,109 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2487.2">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
+  </style>
+</head>
+<body>
+<p class="p1">&lt;!DOCTYPE html&gt;</p>
+<p class="p1">&lt;html&gt;</p>
+<p class="p1">&lt;head&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;meta charset="UTF-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;title&gt;Read Aloud Practice&lt;/title&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;style&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.correct {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>color: black;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.mistake {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>color: red;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>text-decoration: underline;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>body {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>font-family: Arial, sans-serif;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>margin: 20px;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>textarea {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>width: 100%;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>height: 150px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>padding: 10px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>font-size: 16px;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>#startButton {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>padding: 10px 20px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>font-size: 16px;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>#transcribedText {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>margin-top: 20px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>font-size: 18px;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/style&gt;</p>
+<p class="p1">&lt;/head&gt;</p>
+<p class="p1">&lt;body&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;h1&gt;Read Aloud Practice&lt;/h1&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;textarea id="originalText" placeholder="Paste your text here"&gt;&lt;/textarea&gt;&lt;br&gt;&lt;br&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;button id="startButton"&gt;Start Reading&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="transcribedText"&gt;&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;script&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>// Check for browser support</p>
+<p class="p1"><span class="Apple-converted-space">        </span>window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>if ('SpeechRecognition' in window) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const recognition = new SpeechRecognition();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>recognition.lang = 'en-US';</p>
+<p class="p1"><span class="Apple-converted-space">            </span>recognition.interimResults = false;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>recognition.continuous = false;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>const startButton = document.getElementById('startButton');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const originalTextArea = document.getElementById('originalText');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const transcribedDiv = document.getElementById('transcribedText');</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>startButton.addEventListener('click', () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>if (originalTextArea.value.trim() === '') {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>alert('Please paste text into the input area before starting.');</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>recognition.start();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>recognition.addEventListener('result', (event) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const transcript = event.results[0][0].transcript;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>compareTexts(originalTextArea.value, transcript);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>recognition.addEventListener('end', () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>recognition.stop();</p>
+<p class="p1"><span class="Apple-converted-space">            </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>function compareTexts(original, transcribed) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const originalWords = original.trim().split(/\s+/);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>const transcribedWords = transcribed.trim().split(/\s+/);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                </span>let resultHTML = '';</p>
+<p class="p1"><span class="Apple-converted-space">                </span>for (let i = 0; i &lt; originalWords.length; i++) {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>const originalWord = originalWords[i] || '';</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>const transcribedWord = transcribedWords[i] || '';</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>if (originalWord.toLowerCase() === transcribedWord.toLowerCase()) {</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>resultHTML += `&lt;span class="correct"&gt;${transcribedWord} &lt;/span&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>resultHTML += `&lt;span class="mistake"&gt;${transcribedWord} &lt;/span&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>transcribedDiv.innerHTML = `&lt;p&gt;&lt;strong&gt;Your Transcription:&lt;/strong&gt;&lt;/p&gt;${resultHTML}`;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>alert('Sorry, your browser does not support speech recognition.');</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/script&gt;</p>
+<p class="p1">&lt;/body&gt;</p>
+<p class="p1">&lt;/html&gt;</p>
+</body>
+</html>
