@@ -1,109 +1,186 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html>
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <meta http-equiv="Content-Style-Type" content="text/css">
-  <title></title>
-  <meta name="Generator" content="Cocoa HTML Writer">
-  <meta name="CocoaVersion" content="2487.2">
-  <style type="text/css">
-    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
-    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
-  </style>
+    <meta charset="UTF-8">
+    <title>Read Aloud Practice</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        h1 {
+            text-align: center;
+            font-weight: 600;
+            margin-bottom: 30px;
+        }
+        .form-group label {
+            font-weight: 600;
+        }
+        #originalText {
+            background-color: rgba(255, 255, 255, 0.9);
+            color: #000;
+        }
+        #startButton, #resetButton {
+            width: 100%;
+            padding: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            margin-top: 10px;
+            border: none;
+            border-radius: 5px;
+        }
+        #startButton {
+            background-color: #28a745;
+            color: #fff;
+        }
+        #resetButton {
+            background-color: #dc3545;
+            color: #fff;
+        }
+        #startButton:hover {
+            background-color: #218838;
+        }
+        #resetButton:hover {
+            background-color: #c82333;
+        }
+        #transcribedText {
+            margin-top: 30px;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 5px;
+            color: #000;
+        }
+        .correct {
+            color: #28a745;
+            font-weight: 600;
+        }
+        .mistake {
+            color: #dc3545;
+            text-decoration: underline;
+            font-weight: 600;
+        }
+        footer {
+            text-align: center;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.2);
+        }
+        @media (min-width: 768px) {
+            #startButton, #resetButton {
+                width: 48%;
+                margin-top: 0;
+            }
+            #buttonGroup {
+                display: flex;
+                justify-content: space-between;
+            }
+        }
+    </style>
 </head>
 <body>
-<p class="p1">&lt;!DOCTYPE html&gt;</p>
-<p class="p1">&lt;html&gt;</p>
-<p class="p1">&lt;head&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;meta charset="UTF-8"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;title&gt;Read Aloud Practice&lt;/title&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;style&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.correct {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>color: black;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.mistake {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>color: red;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>text-decoration: underline;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>body {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-family: Arial, sans-serif;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin: 20px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>textarea {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>width: 100%;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>height: 150px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 10px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 16px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>#startButton {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 10px 20px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 16px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>#transcribedText {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin-top: 20px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 18px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/style&gt;</p>
-<p class="p1">&lt;/head&gt;</p>
-<p class="p1">&lt;body&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;h1&gt;Read Aloud Practice&lt;/h1&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;textarea id="originalText" placeholder="Paste your text here"&gt;&lt;/textarea&gt;&lt;br&gt;&lt;br&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;button id="startButton"&gt;Start Reading&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="transcribedText"&gt;&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;script&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>// Check for browser support</p>
-<p class="p1"><span class="Apple-converted-space">        </span>window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>if ('SpeechRecognition' in window) {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const recognition = new SpeechRecognition();</p>
-<p class="p1"><span class="Apple-converted-space">            </span>recognition.lang = 'en-US';</p>
-<p class="p1"><span class="Apple-converted-space">            </span>recognition.interimResults = false;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>recognition.continuous = false;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">            </span>const startButton = document.getElementById('startButton');</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const originalTextArea = document.getElementById('originalText');</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const transcribedDiv = document.getElementById('transcribedText');</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">            </span>startButton.addEventListener('click', () =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>if (originalTextArea.value.trim() === '') {</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>alert('Please paste text into the input area before starting.');</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>return;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>}</p>
-<p class="p1"><span class="Apple-converted-space">                </span>recognition.start();</p>
-<p class="p1"><span class="Apple-converted-space">            </span>});</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">            </span>recognition.addEventListener('result', (event) =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>const transcript = event.results[0][0].transcript;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>compareTexts(originalTextArea.value, transcript);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>});</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">            </span>recognition.addEventListener('end', () =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>recognition.stop();</p>
-<p class="p1"><span class="Apple-converted-space">            </span>});</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">            </span>function compareTexts(original, transcribed) {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>const originalWords = original.trim().split(/\s+/);</p>
-<p class="p1"><span class="Apple-converted-space">                </span>const transcribedWords = transcribed.trim().split(/\s+/);</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">                </span>let resultHTML = '';</p>
-<p class="p1"><span class="Apple-converted-space">                </span>for (let i = 0; i &lt; originalWords.length; i++) {</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>const originalWord = originalWords[i] || '';</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>const transcribedWord = transcribedWords[i] || '';</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">                    </span>if (originalWord.toLowerCase() === transcribedWord.toLowerCase()) {</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>resultHTML += `&lt;span class="correct"&gt;${transcribedWord} &lt;/span&gt;`;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>} else {</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>resultHTML += `&lt;span class="mistake"&gt;${transcribedWord} &lt;/span&gt;`;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>}</p>
-<p class="p1"><span class="Apple-converted-space">                </span>}</p>
-<p class="p1"><span class="Apple-converted-space">                </span>transcribedDiv.innerHTML = `&lt;p&gt;&lt;strong&gt;Your Transcription:&lt;/strong&gt;&lt;/p&gt;${resultHTML}`;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>} else {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>alert('Sorry, your browser does not support speech recognition.');</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/script&gt;</p>
-<p class="p1">&lt;/body&gt;</p>
-<p class="p1">&lt;/html&gt;</p>
+    <div class="container">
+        <h1>Read Aloud Practice</h1>
+        <div class="form-group">
+            <label for="originalText">Paste Your Text Here:</label>
+            <textarea id="originalText" class="form-control" placeholder="Enter text to practice reading aloud"></textarea>
+        </div>
+        <div id="buttonGroup">
+            <button id="startButton">Start Reading</button>
+            <button id="resetButton">Reset</button>
+        </div>
+        <div id="transcribedText"></div>
+    </div>
+    <footer>
+        <p>&copy; 2023 Read Aloud Practice App</p>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // Check for browser support
+        window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+        if ('SpeechRecognition' in window) {
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'en-US';
+            recognition.interimResults = false;
+            recognition.continuous = false;
+
+            const startButton = document.getElementById('startButton');
+            const resetButton = document.getElementById('resetButton');
+            const originalTextArea = document.getElementById('originalText');
+            const transcribedDiv = document.getElementById('transcribedText');
+
+            startButton.addEventListener('click', () => {
+                if (originalTextArea.value.trim() === '') {
+                    alert('Please paste text into the input area before starting.');
+                    return;
+                }
+                startButton.disabled = true;
+                transcribedDiv.innerHTML = '<p><em>Listening...</em></p>';
+                recognition.start();
+            });
+
+            resetButton.addEventListener('click', () => {
+                originalTextArea.value = '';
+                transcribedDiv.innerHTML = '';
+                startButton.disabled = false;
+            });
+
+            recognition.addEventListener('result', (event) => {
+                const transcript = event.results[0][0].transcript;
+                compareTexts(originalTextArea.value, transcript);
+                startButton.disabled = false;
+            });
+
+            recognition.addEventListener('end', () => {
+                recognition.stop();
+                startButton.disabled = false;
+            });
+
+            function compareTexts(original, transcribed) {
+                const originalWords = original.trim().split(/\s+/);
+                const transcribedWords = transcribed.trim().split(/\s+/);
+
+                let resultHTML = '';
+                let correctCount = 0;
+
+                for (let i = 0; i < originalWords.length; i++) {
+                    const originalWord = originalWords[i] || '';
+                    const transcribedWord = transcribedWords[i] || '';
+
+                    if (originalWord.toLowerCase() === transcribedWord.toLowerCase()) {
+                        resultHTML += `<span class="correct">${transcribedWord} </span>`;
+                        correctCount++;
+                    } else {
+                        resultHTML += `<span class="mistake">${transcribedWord} </span>`;
+                    }
+                }
+
+                const accuracy = ((correctCount / originalWords.length) * 100).toFixed(2);
+
+                transcribedDiv.innerHTML = `
+                    <p><strong>Your Transcription:</strong></p>
+                    <p>${resultHTML}</p>
+                    <p><strong>Accuracy:</strong> ${accuracy}%</p>
+                `;
+            }
+        } else {
+            alert('Sorry, your browser does not support speech recognition.');
+        }
+    </script>
 </body>
 </html>
