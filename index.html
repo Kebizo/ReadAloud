@@ -42,7 +42,7 @@
             height: 300px;
             resize: vertical;
         }
-        #startButton, #resetButton, #playAudioButton, #stopAudioButton {
+        #startButton, #resetButton {
             width: 100%;
             padding: 12px;
             font-size: 16px;
@@ -59,6 +59,22 @@
             background-color: #dc3545;
             color: #fff;
         }
+        #startButton:hover {
+            background-color: #218838;
+        }
+        #resetButton:hover {
+            background-color: #c82333;
+        }
+        #playAudioButton, #stopAudioButton, #recordAudioButton {
+            width: 32%;
+            padding: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 10px;
+            margin-right: 1%;
+            border: none;
+            border-radius: 5px;
+        }
         #playAudioButton {
             background-color: #007bff;
             color: #fff;
@@ -67,17 +83,18 @@
             background-color: #ffc107;
             color: #000;
         }
-        #startButton:hover {
-            background-color: #218838;
-        }
-        #resetButton:hover {
-            background-color: #c82333;
+        #recordAudioButton {
+            background-color: #dc3545;
+            color: #fff;
         }
         #playAudioButton:hover {
             background-color: #0056b3;
         }
         #stopAudioButton:hover {
             background-color: #e0a800;
+        }
+        #recordAudioButton:hover {
+            background-color: #c82333;
         }
         #transcribedText {
             background-color: rgba(255, 255, 255, 0.9);
@@ -132,6 +149,13 @@
         .navbar-custom .nav-link:hover {
             color: #ccc;
         }
+        .navbar-toggler {
+            background-color: #ffd700; /* Yellow color */
+            border: none;
+        }
+        .navbar-toggler-icon {
+            background-image: url('data:image/svg+xml;charset=utf8,%3Csvg viewBox="0 0 30 30" xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath stroke="rgba%28100, 100, 100, 1%29)" stroke-width="2" stroke-linecap="round" stroke-miterlimit="10" d="M4 7h22M4 15h22M4 23h22"/%3E%3C/svg%3E');
+        }
         /* Deck Item Styles */
         .deck-item {
             cursor: pointer;
@@ -141,6 +165,17 @@
         .deck-item:hover {
             color: #0056b3;
         }
+        .delete-button {
+            background-color: transparent;
+            border: none;
+            color: #dc3545;
+            font-size: 16px;
+            cursor: pointer;
+            float: right;
+        }
+        .delete-button:hover {
+            color: #bd2130;
+        }
         footer {
             text-align: center;
             padding: 10px;
@@ -149,10 +184,14 @@
         }
         @media (max-width: 767.98px) {
             /* Adjustments for mobile devices */
-            #startButton, #resetButton, #saveButton, #playAudioButton, #stopAudioButton {
+            #startButton, #resetButton, #saveButton, #playAudioButton, #stopAudioButton, #recordAudioButton {
                 width: 100%;
                 font-size: 14px;
                 padding: 10px;
+                margin-right: 0;
+            }
+            #playAudioButton, #stopAudioButton, #recordAudioButton {
+                margin-bottom: 10px;
             }
             .left-column, .right-column {
                 padding: 10px;
@@ -170,7 +209,7 @@
             <!-- Menu Button -->
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarMenu"
                 aria-controls="navbarMenu" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span> Menu
+                Menu
             </button>
             <div class="collapse navbar-collapse" id="navbarMenu">
                 <ul class="navbar-nav mr-auto">
@@ -222,6 +261,7 @@
                 <div class="form-group">
                     <button id="playAudioButton" class="btn">Play Audio</button>
                     <button id="stopAudioButton" class="btn">Stop Audio</button>
+                    <button id="recordAudioButton" class="btn">Record Audio</button>
                 </div>
                 <div class="form-group">
                     <label for="originalText">Type or paste what you want to read aloud here. Or you can import from Anki files:</label>
@@ -265,6 +305,7 @@
             </button>
           </div>
           <div class="modal-body">
+            <button id="loadFileButton" class="btn btn-success btn-block">Load File</button>
             <button id="ankiDecksButton" class="btn btn-primary btn-block">Anki Decks</button>
             <button id="downloadLinkButton" class="btn btn-secondary btn-block">Download Link</button>
           </div>
@@ -313,6 +354,7 @@
             const saveButton = document.getElementById('saveButton');
             const playAudioButton = document.getElementById('playAudioButton');
             const stopAudioButton = document.getElementById('stopAudioButton');
+            const recordAudioButton = document.getElementById('recordAudioButton');
             const originalTextArea = document.getElementById('originalText');
             const transcribedDiv = document.getElementById('transcribedText');
             const savedTranscriptionsDiv = document.getElementById('savedTranscriptions');
@@ -423,12 +465,27 @@
             function displaySavedTranscriptions() {
                 const savedTranscriptions = JSON.parse(localStorage.getItem('savedTranscriptions')) || [];
                 savedTranscriptionsDiv.innerHTML = '';
-                savedTranscriptions.reverse().forEach((item) => {
+                savedTranscriptions.reverse().forEach((item, index) => {
                     const div = document.createElement('div');
                     div.classList.add('saved-transcription-item');
-                    div.innerHTML = `<p><strong>${item.timestamp}</strong></p><p>${item.transcription}</p>`;
+                    div.innerHTML = `<button class="delete-button" data-index="${index}">&times;</button><p><strong>${item.timestamp}</strong></p><p>${item.transcription}</p>`;
                     savedTranscriptionsDiv.appendChild(div);
                 });
+                // Add event listeners for delete buttons
+                const deleteButtons = savedTranscriptionsDiv.querySelectorAll('.delete-button');
+                deleteButtons.forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const index = e.target.getAttribute('data-index');
+                        deleteTranscription(index);
+                    });
+                });
+            }
+
+            function deleteTranscription(index) {
+                let savedTranscriptions = JSON.parse(localStorage.getItem('savedTranscriptions')) || [];
+                savedTranscriptions.splice(savedTranscriptions.length - 1 - index, 1); // Adjust for reversed array
+                localStorage.setItem('savedTranscriptions', JSON.stringify(savedTranscriptions));
+                displaySavedTranscriptions();
             }
 
             // Play and Stop Audio Buttons
@@ -445,8 +502,46 @@
                 audioPlayer.currentTime = 0;
             });
 
+            // Record Audio Button
+            let mediaRecorder;
+            let recordedChunks = [];
+
+            recordAudioButton.addEventListener('click', () => {
+                if (mediaRecorder && mediaRecorder.state === 'recording') {
+                    mediaRecorder.stop();
+                    recordAudioButton.textContent = 'Record Audio';
+                } else {
+                    navigator.mediaDevices.getUserMedia({ audio: true })
+                        .then(stream => {
+                            mediaRecorder = new MediaRecorder(stream);
+                            mediaRecorder.start();
+                            recordAudioButton.textContent = 'Stop Recording';
+                            recordedChunks = [];
+
+                            mediaRecorder.ondataavailable = event => {
+                                if (event.data.size > 0) {
+                                    recordedChunks.push(event.data);
+                                }
+                            };
+
+                            mediaRecorder.onstop = () => {
+                                const audioBlob = new Blob(recordedChunks);
+                                const audioURL = URL.createObjectURL(audioBlob);
+                                // Save or process the recorded audio as needed
+                                currentAudioSrc = audioURL;
+                                audioPlayer.src = currentAudioSrc;
+                            };
+                        })
+                        .catch(error => {
+                            console.error('Error accessing microphone:', error);
+                            alert('Error accessing microphone.');
+                        });
+                }
+            });
+
             // Import Functionality
             const importButton = document.getElementById('importButton');
+            const loadFileButton = document.getElementById('loadFileButton');
             const ankiDecksButton = document.getElementById('ankiDecksButton');
             const downloadLinkButton = document.getElementById('downloadLinkButton');
             const apkgImportButton = document.getElementById('apkgImportButton');
@@ -457,6 +552,20 @@
 
             importButton.addEventListener('click', () => {
                 $('#importModal').modal('show');
+            });
+
+            loadFileButton.addEventListener('click', () => {
+                $('#importModal').modal('hide');
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.apkg';
+                input.onchange = e => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        readApkgFile(file);
+                    }
+                };
+                input.click();
             });
 
             ankiDecksButton.addEventListener('click', () => {
@@ -485,6 +594,24 @@
                         throw new Error('Network response was not ok.');
                     }
                     const arrayBuffer = await response.arrayBuffer();
+                    processApkgData(arrayBuffer);
+                } catch (error) {
+                    console.error('Error importing .apkg file:', error);
+                    alert('Failed to import .apkg file. Please check the URL and try again.');
+                }
+            }
+
+            function readApkgFile(file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const arrayBuffer = e.target.result;
+                    processApkgData(arrayBuffer);
+                };
+                reader.readAsArrayBuffer(file);
+            }
+
+            async function processApkgData(arrayBuffer) {
+                try {
                     const zip = await JSZip.loadAsync(arrayBuffer);
                     const sqliteFile = zip.file('collection.anki2');
                     const mediaFile = zip.file('media');
@@ -511,8 +638,8 @@
                     const contents = getDeckContents(db);
                     displayDeckContents(contents);
                 } catch (error) {
-                    console.error('Error importing .apkg file:', error);
-                    alert('Failed to import .apkg file. Please check the URL and try again.');
+                    console.error('Error processing .apkg data:', error);
+                    alert('Failed to process .apkg file.');
                 }
             }
 
