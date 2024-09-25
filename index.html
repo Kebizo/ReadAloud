@@ -10,12 +10,94 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <!-- JSZip and sql.js Libraries -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.6.0/jszip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.5.0/sql-wasm.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
     <!-- Custom CSS -->
     <style>
-        /* Existing CSS styles... */
-        /* Add any new styles here */
+        /* Existing CSS styles... (Your previous styles) */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .container {
+            flex: 1;
+            max-width: 1200px;
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+        h1 {
+            text-align: center;
+            font-weight: 600;
+            margin-bottom: 30px;
+        }
+        .form-group label {
+            font-weight: 600;
+        }
+        #originalText {
+            background-color: rgba(255, 255, 255, 0.9);
+            color: #000;
+            height: 400px;
+            resize: vertical;
+        }
+        #startButton, #resetButton {
+            width: 100%;
+            padding: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            margin-top: 10px;
+            border: none;
+            border-radius: 5px;
+        }
+        #startButton {
+            background-color: #28a745;
+            color: #fff;
+        }
+        #resetButton {
+            background-color: #dc3545;
+            color: #fff;
+        }
+        #startButton:hover {
+            background-color: #218838;
+        }
+        #resetButton:hover {
+            background-color: #c82333;
+        }
+        #transcribedText {
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 5px;
+            color: #000;
+            height: 400px;
+            overflow-y: auto;
+        }
+        /* Updated Save Button Styles */
+        #saveButton {
+            width: 100%;
+            padding: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            margin-top: 10px;
+            background-color: #ffd700; /* Yellow-gold color */
+            color: #000;
+            border: none;
+            border-radius: 5px;
+        }
+        #saveButton:hover {
+            background-color: #e6c200;
+        }
+        #savedTranscriptions {
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 5px;
+            color: #000;
+            height: 400px;
+            overflow-y: auto;
+            margin-top: 30px;
+        }
         /* Import Button Styles */
         #importButton {
             position: fixed;
@@ -59,56 +141,96 @@
             overflow-y: auto;
             margin-top: 30px;
         }
+        footer {
+            text-align: center;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.2);
+        }
+        /* Media Queries for Mobile Devices */
+        /* ... (Your existing media queries) ... */
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Existing content... -->
-        <!-- Add the deck contents box below saved transcriptions -->
-        <div id="deckContents" style="display: none;">
-            <h3>Deck Contents</h3>
-            <div id="deckItems"></div>
+        <h1>Read Aloud Practice</h1>
+        <div class="row">
+            <!-- Left Column -->
+            <div class="col-md-6 col-sm-12 left-column">
+                <!-- Language Selector -->
+                <div class="form-group">
+                    <label for="languageSelect">Choose Language:</label>
+                    <select id="languageSelect" class="form-control">
+                        <!-- ... (Language options) ... -->
+                        <option value="en-US">English (US)</option>
+                        <!-- Add other languages as needed -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="originalText">Paste what you want to read aloud here!</label>
+                    <textarea id="originalText" class="form-control" placeholder="Enter text to practice reading aloud"></textarea>
+                </div>
+                <div id="buttonGroup">
+                    <button id="startButton" class="btn btn-primary">Read Aloud</button>
+                    <button id="resetButton" class="btn btn-secondary">Reset</button>
+                </div>
+            </div>
+            <!-- Right Column -->
+            <div class="col-md-6 col-sm-12 right-column">
+                <div class="transcription-section">
+                    <h3>Transcription</h3>
+                    <div id="transcribedText"></div>
+                    <button id="saveButton">Save Transcription</button>
+                </div>
+                <div class="saved-transcriptions-section">
+                    <h3>Saved Transcriptions</h3>
+                    <div id="savedTranscriptions"></div>
+                </div>
+                <!-- Deck Contents Section -->
+                <div id="deckContents" style="display: none;">
+                    <h3>Deck Contents</h3>
+                    <div id="deckItems"></div>
+                </div>
+            </div>
         </div>
     </div>
     <!-- Import Button -->
     <button id="importButton">Import</button>
     <!-- Import Modal -->
     <div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h4 class="modal-title" id="importModalLabel">Import</h4>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <button id="ankiDecksButton" class="btn btn-primary btn-block">Anki Decks</button>
-            <button id="downloadLinkButton" class="btn btn-secondary btn-block">Download Link</button>
-          </div>
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="importModalLabel">Import</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="border: none; background: none;">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <button id="ankiDecksButton" class="btn btn-primary btn-block">Anki Decks</button>
+                    <button id="uploadFileButton" class="btn btn-secondary btn-block">Upload .apkg File</button>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
-    <!-- Download Link Modal -->
-    <div class="modal fade" id="downloadLinkModal" tabindex="-1" aria-labelledby="downloadLinkModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h4 class="modal-title" id="downloadLinkModalLabel">Download Link</h4>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <p>Link to .apkg file to import:</p>
-            <input type="text" id="apkgLinkInput" class="form-control" placeholder="Enter .apkg file URL">
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-            <button id="apkgImportButton" type="button" class="btn btn-primary">OK</button>
-          </div>
+    <!-- File Upload Modal -->
+    <div class="modal fade" id="fileUploadModal" tabindex="-1" aria-labelledby="fileUploadModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <form id="fileUploadForm" class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="fileUploadModalLabel">Upload .apkg File</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="border: none; background: none;">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <input type="file" id="apkgFileInput" accept=".apkg" class="form-control-file">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button id="apkgFileImportButton" type="submit" class="btn btn-primary">OK</button>
+                </div>
+            </form>
         </div>
-      </div>
     </div>
     <!-- Footer -->
     <footer>
@@ -121,94 +243,225 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
     <!-- Your existing JavaScript code... -->
     <script>
-        // Your existing JavaScript code...
+        // Check for browser support
+        window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-        // Import Button Functionality
-        const importButton = document.getElementById('importButton');
-        const ankiDecksButton = document.getElementById('ankiDecksButton');
-        const downloadLinkButton = document.getElementById('downloadLinkButton');
-        const apkgImportButton = document.getElementById('apkgImportButton');
-        const apkgLinkInput = document.getElementById('apkgLinkInput');
-        const deckContentsDiv = document.getElementById('deckContents');
-        const deckItemsDiv = document.getElementById('deckItems');
+        if ('SpeechRecognition' in window) {
+            // Existing code for speech recognition...
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'en-US';
+            recognition.interimResults = true; // Enable interim results for real-time transcription
+            recognition.continuous = true; // Keep recognition running until stopped by the user
 
-        importButton.addEventListener('click', () => {
-            $('#importModal').modal('show');
-        });
+            const startButton = document.getElementById('startButton');
+            const resetButton = document.getElementById('resetButton');
+            const saveButton = document.getElementById('saveButton');
+            const originalTextArea = document.getElementById('originalText');
+            const transcribedDiv = document.getElementById('transcribedText');
+            const savedTranscriptionsDiv = document.getElementById('savedTranscriptions');
+            const languageSelect = document.getElementById('languageSelect');
 
-        ankiDecksButton.addEventListener('click', () => {
-            window.open('https://ankiweb.net/shared/decks', '_blank');
-        });
+            let isReading = false;
+            let finalTranscript = '';
 
-        downloadLinkButton.addEventListener('click', () => {
-            $('#importModal').modal('hide');
-            $('#downloadLinkModal').modal('show');
-        });
+            // Load saved transcriptions from localStorage
+            loadSavedTranscriptions();
 
-        apkgImportButton.addEventListener('click', () => {
-            const apkgUrl = apkgLinkInput.value.trim();
-            if (!apkgUrl) {
-                alert('Please enter a valid .apkg file URL.');
-                return;
-            }
-            $('#downloadLinkModal').modal('hide');
-            fetchApkgFile(apkgUrl);
-        });
-
-        async function fetchApkgFile(url) {
-            try {
-                const response = await fetch(url);
-                if (!response.ok) {
-                    throw new Error('Network response was not ok.');
+            startButton.addEventListener('click', () => {
+                if (!isReading) {
+                    if (originalTextArea.value.trim() === '') {
+                        alert('Please paste text into the input area before starting.');
+                        return;
+                    }
+                    recognition.lang = languageSelect.value;
+                    startButton.textContent = 'Stop';
+                    startButton.classList.remove('btn-primary');
+                    startButton.classList.add('btn-danger');
+                    isReading = true;
+                    finalTranscript = '';
+                    transcribedDiv.innerHTML = '<p><em>Listening...</em></p>';
+                    recognition.start();
+                } else {
+                    // User clicked Stop
+                    isReading = false;
+                    recognition.stop();
+                    startButton.disabled = true; // Disable until recognition stops
                 }
-                const arrayBuffer = await response.arrayBuffer();
-                const zip = await JSZip.loadAsync(arrayBuffer);
-                const sqliteFile = zip.file('collection.anki2');
-                if (!sqliteFile) {
-                    alert('Invalid .apkg file format.');
+            });
+
+            resetButton.addEventListener('click', () => {
+                originalTextArea.value = '';
+                transcribedDiv.innerHTML = '';
+                startButton.textContent = 'Read Aloud';
+                startButton.classList.remove('btn-danger');
+                startButton.classList.add('btn-primary');
+                startButton.disabled = false;
+                isReading = false;
+                recognition.stop();
+                finalTranscript = '';
+            });
+
+            saveButton.addEventListener('click', () => {
+                if (finalTranscript.trim() === '') {
+                    alert('There is no transcription to save.');
                     return;
                 }
-                const sqliteData = await sqliteFile.async('uint8array');
-                const SQL = await initSqlJs({
-                    locateFile: file => 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.5.0/sql-wasm.wasm'
-                });
-                const db = new SQL.Database(sqliteData);
-                const contents = getDeckContents(db);
-                displayDeckContents(contents);
-            } catch (error) {
-                console.error('Error importing .apkg file:', error);
-                alert('Failed to import .apkg file. Please check the URL and try again.');
-            }
-        }
-
-        function getDeckContents(db) {
-            const res = db.exec("SELECT flds FROM notes");
-            if (res.length === 0) {
-                return [];
-            }
-            const cards = res[0].values.map(row => row[0]);
-            return cards;
-        }
-
-        function displayDeckContents(cards) {
-            deckItemsDiv.innerHTML = '';
-            cards.forEach((card, index) => {
-                const div = document.createElement('div');
-                div.classList.add('deck-item');
-                div.textContent = `Card ${index + 1}: ${stripHtml(card)}`;
-                div.addEventListener('click', () => {
-                    originalTextArea.value = stripHtml(card);
-                    window.scrollTo(0, 0);
-                });
-                deckItemsDiv.appendChild(div);
+                saveTranscription(finalTranscript);
+                alert('Transcription saved!');
+                finalTranscript = '';
+                transcribedDiv.innerHTML = '';
             });
-            deckContentsDiv.style.display = 'block';
-        }
 
-        function stripHtml(html) {
-            const tmp = document.createElement('div');
-            tmp.innerHTML = html;
-            return tmp.textContent || tmp.innerText || '';
+            recognition.addEventListener('result', (event) => {
+                let interimTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    const transcript = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) {
+                        finalTranscript += transcript + ' ';
+                    } else {
+                        interimTranscript += transcript;
+                    }
+                }
+                transcribedDiv.innerHTML = `<p>${finalTranscript}${interimTranscript}</p>`;
+            });
+
+            recognition.addEventListener('end', () => {
+                if (isReading) {
+                    // Restart recognition to keep it running
+                    recognition.start();
+                } else {
+                    // Recognition stopped by user
+                    startButton.textContent = 'Read Aloud';
+                    startButton.classList.remove('btn-danger');
+                    startButton.classList.add('btn-primary');
+                    startButton.disabled = false;
+                }
+            });
+
+            recognition.addEventListener('error', (event) => {
+                if (event.error !== 'aborted') {
+                    alert('An error occurred during speech recognition: ' + event.error);
+                }
+                startButton.textContent = 'Read Aloud';
+                startButton.classList.remove('btn-danger');
+                startButton.classList.add('btn-primary');
+                startButton.disabled = false;
+                isReading = false;
+            });
+
+            function saveTranscription(transcription) {
+                let savedTranscriptions = JSON.parse(localStorage.getItem('savedTranscriptions')) || [];
+                const timestamp = new Date().toLocaleString();
+                savedTranscriptions.push({ timestamp, transcription });
+                localStorage.setItem('savedTranscriptions', JSON.stringify(savedTranscriptions));
+                displaySavedTranscriptions();
+            }
+
+            function loadSavedTranscriptions() {
+                displaySavedTranscriptions();
+            }
+
+            function displaySavedTranscriptions() {
+                const savedTranscriptions = JSON.parse(localStorage.getItem('savedTranscriptions')) || [];
+                savedTranscriptionsDiv.innerHTML = '';
+                savedTranscriptions.reverse().forEach((item) => {
+                    const div = document.createElement('div');
+                    div.classList.add('saved-transcription-item');
+                    div.innerHTML = `<p><strong>${item.timestamp}</strong></p><p>${item.transcription}</p>`;
+                    savedTranscriptionsDiv.appendChild(div);
+                });
+            }
+
+            // Import Button Functionality
+            const importButton = document.getElementById('importButton');
+            const ankiDecksButton = document.getElementById('ankiDecksButton');
+            const uploadFileButton = document.getElementById('uploadFileButton');
+            const apkgFileInput = document.getElementById('apkgFileInput');
+            const apkgFileImportButton = document.getElementById('apkgFileImportButton');
+            const deckContentsDiv = document.getElementById('deckContents');
+            const deckItemsDiv = document.getElementById('deckItems');
+
+            importButton.addEventListener('click', () => {
+                $('#importModal').modal('show');
+            });
+
+            ankiDecksButton.addEventListener('click', () => {
+                window.open('https://ankiweb.net/shared/decks', '_blank');
+            });
+
+            uploadFileButton.addEventListener('click', () => {
+                $('#importModal').modal('hide');
+                $('#fileUploadModal').modal('show');
+            });
+
+            document.getElementById('fileUploadForm').addEventListener('submit', (event) => {
+                event.preventDefault();
+                if (!apkgFileInput.files.length) {
+                    alert('Please select a .apkg file to upload.');
+                    return;
+                }
+                $('#fileUploadModal').modal('hide');
+                const file = apkgFileInput.files[0];
+                processApkgFile(file);
+            });
+
+            async function processApkgFile(file) {
+                try {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const zip = await JSZip.loadAsync(arrayBuffer);
+                    const sqliteFile = zip.file('collection.anki2');
+                    if (!sqliteFile) {
+                        alert('Invalid .apkg file format.');
+                        return;
+                    }
+                    const sqliteData = await sqliteFile.async('uint8array');
+                    const SQL = await initSqlJs({
+                        locateFile: file => 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.wasm'
+                    });
+                    const db = new SQL.Database(sqliteData);
+                    const contents = getDeckContents(db);
+                    displayDeckContents(contents);
+                } catch (error) {
+                    console.error('Error importing .apkg file:', error);
+                    alert('Failed to import .apkg file. Please check the file and try again.');
+                }
+            }
+
+            function getDeckContents(db) {
+                const res = db.exec("SELECT flds FROM notes");
+                if (res.length === 0) {
+                    return [];
+                }
+                const cards = res[0].values.map(row => row[0]);
+                return cards;
+            }
+
+            function displayDeckContents(cards) {
+                deckItemsDiv.innerHTML = '';
+                cards.forEach((card, index) => {
+                    const fields = card.split('\u001f'); // Fields are separated by Unit Separator
+                    const front = stripHtml(fields[0] || '');
+                    const back = stripHtml(fields[1] || '');
+                    const div = document.createElement('div');
+                    div.classList.add('deck-item');
+                    div.textContent = `Card ${index + 1}: ${front}`;
+                    div.addEventListener('click', () => {
+                        originalTextArea.value = `${front}\n\n${back}`;
+                        window.scrollTo(0, 0);
+                    });
+                    deckItemsDiv.appendChild(div);
+                });
+                deckContentsDiv.style.display = 'block';
+            }
+
+            function stripHtml(html) {
+                const tmp = document.createElement('div');
+                tmp.innerHTML = html;
+                return tmp.textContent || tmp.innerText || '';
+            }
+
+        } else {
+            alert('Sorry, your browser does not support speech recognition.');
         }
     </script>
 </body>
