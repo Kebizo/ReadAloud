@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Read Aloud Practice</title>
+    <!-- Add viewport meta tag -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
     <!-- Google Fonts -->
@@ -136,6 +138,57 @@
         .saved-transcription-item p {
             margin: 0;
         }
+
+        /* Media Queries for Mobile Devices */
+        @media (max-width: 767.98px) {
+            /* Adjust text area heights */
+            #originalText, #transcribedText, #savedTranscriptions {
+                height: auto;
+                max-height: none;
+            }
+
+            /* Adjust font sizes for readability */
+            body {
+                font-size: 16px;
+            }
+
+            h1 {
+                font-size: 22px;
+                margin-bottom: 20px;
+            }
+
+            /* Adjust button sizes and spacing */
+            #startButton, #resetButton, #saveButton {
+                width: 100%;
+                font-size: 16px;
+                padding: 12px;
+                margin-top: 10px;
+            }
+
+            #buttonGroup {
+                flex-direction: column;
+            }
+
+            #buttonGroup button {
+                margin-bottom: 10px;
+            }
+
+            /* Adjust padding */
+            .left-column, .right-column {
+                padding: 10px;
+            }
+
+            /* Adjust footer */
+            footer {
+                font-size: 14px;
+                padding: 5px;
+            }
+
+            /* Adjust the saved transcriptions section margin */
+            .saved-transcriptions-section {
+                margin-top: 20px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -143,7 +196,7 @@
         <h1>Read Aloud Practice</h1>
         <div class="row">
             <!-- Left Column -->
-            <div class="col-md-6 left-column">
+            <div class="col-md-6 col-sm-12 left-column">
                 <!-- Language Selector -->
                 <div class="form-group">
                     <label for="languageSelect">Choose Language:</label>
@@ -181,7 +234,7 @@
                 </div>
             </div>
             <!-- Right Column -->
-            <div class="col-md-6 right-column">
+            <div class="col-md-6 col-sm-12 right-column">
                 <div class="transcription-section">
                     <h3>Transcription</h3>
                     <div id="transcribedText"></div>
