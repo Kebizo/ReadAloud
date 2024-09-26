@@ -64,6 +64,20 @@
         #resetButton:hover {
             background-color: #c82333;
         }
+        #selectTextButton {
+            width: 100%;
+            padding: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            margin-top: 10px;
+            background-color: #17a2b8; /* Light blue color */
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+        }
+        #selectTextButton:hover {
+            background-color: #138496;
+        }
         #transcribedText {
             background-color: rgba(255, 255, 255, 0.9);
             padding: 20px;
@@ -144,7 +158,7 @@
             }
 
             /* Adjust button sizes and spacing */
-            #startButton, #resetButton, #saveButton {
+            #startButton, #resetButton, #saveButton, #selectTextButton {
                 width: 100%;
                 font-size: 16px;
                 padding: 12px;
@@ -229,9 +243,10 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="originalText">Type or paste what you want to read aloud here.</label>
+                    <label for="originalText">Select, type, or paste what you want to read aloud here.</label>
                     <textarea id="originalText" class="form-control" placeholder="Enter text to practice reading aloud"></textarea>
                 </div>
+                <button id="selectTextButton" class="btn">Select Text</button>
                 <div id="buttonGroup">
                     <button id="startButton" class="btn btn-primary">Read Aloud</button>
                     <button id="resetButton" class="btn btn-secondary">Reset</button>
@@ -255,7 +270,36 @@
         <p>&copy; 2024 Read Aloud App</p>
     </footer>
 
+    <!-- Select Text Modal -->
+    <div class="modal fade" id="selectTextModal" tabindex="-1" aria-labelledby="selectTextModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content" style="color: #000;">
+          <div class="modal-header">
+            <h5 class="modal-title" id="selectTextModalLabel">Select Text</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <ul class="list-group">
+              <li class="list-group-item">
+                <a href="#" class="predefined-text" data-file="#1 Introduction.html">Shadow English #1 Introduction</a>
+              </li>
+              <li class="list-group-item">
+                <a href="#" class="predefined-text" data-file="#2 Meaning Behind the Title.html">Shadow English #2 Meaning Behind the Title</a>
+              </li>
+              <!-- Add more options as needed -->
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- JavaScript -->
+    <!-- Include jQuery and Bootstrap JS for modals -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
     <script>
         // Check for browser support
         window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -269,6 +313,7 @@
             const startButton = document.getElementById('startButton');
             const resetButton = document.getElementById('resetButton');
             const saveButton = document.getElementById('saveButton');
+            const selectTextButton = document.getElementById('selectTextButton');
             const originalTextArea = document.getElementById('originalText');
             const transcribedDiv = document.getElementById('transcribedText');
             const savedTranscriptionsDiv = document.getElementById('savedTranscriptions');
@@ -283,7 +328,7 @@
             startButton.addEventListener('click', () => {
                 if (!isReading) {
                     if (originalTextArea.value.trim() === '') {
-                        alert('Please paste text into the input area before starting.');
+                        alert('Please select, type, or paste text into the input area before starting.');
                         return;
                     }
                     recognition.lang = languageSelect.value;
@@ -405,6 +450,30 @@
                 localStorage.setItem('savedTranscriptions', JSON.stringify(savedTranscriptions));
                 displaySavedTranscriptions();
             }
+
+            // Select Text functionality
+            selectTextButton.addEventListener('click', () => {
+                $('#selectTextModal').modal('show');
+            });
+
+            const predefinedTexts = document.querySelectorAll('.predefined-text');
+            predefinedTexts.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const file = link.getAttribute('data-file');
+                    fetch(file)
+                        .then(response => response.text())
+                        .then(data => {
+                            originalTextArea.value = data;
+                            $('#selectTextModal').modal('hide');
+                        })
+                        .catch(error => {
+                            console.error('Error fetching text:', error);
+                            alert('An error occurred while fetching the text.');
+                        });
+                });
+            });
+
         } else {
             alert('Sorry, your browser does not support speech recognition.');
         }
