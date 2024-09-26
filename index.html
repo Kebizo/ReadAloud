@@ -101,9 +101,11 @@
         .progress-bar {
             background-color: #28a745;
         }
-        #accuracyFeedback, #transcribedWordCount {
+        #transcribedWordCount {
             font-size: 14px;
             color: #fff;
+            margin-top: 5px;
+            text-align: right;
         }
         /* Updated Save Button Styles */
         #saveButton {
@@ -273,11 +275,7 @@
                 <div class="transcription-section">
                     <h3>Transcription</h3>
                     <div id="transcribedText"></div>
-                    <!-- Transcription Stats -->
-                    <div id="transcribedStats" style="display: flex; justify-content: space-between; margin-top: 5px;">
-                        <div id="accuracyFeedback"></div>
-                        <div id="transcribedWordCount"></div>
-                    </div>
+                    <div id="transcribedWordCount"></div>
                     <!-- Progress Bar -->
                     <div id="progressContainer">
                         <div class="progress mt-2">
@@ -311,7 +309,7 @@
           <div class="modal-body">
             <ul class="list-group">
               <li class="list-group-item">
-                <a href="#" class="predefined-text" data-file="#1.txt">Shadow English #1 Introduction</a>
+                <a href="#" class="predefined-text" data-file="1.txt">Shadow English #1 Introduction</a>
               </li>
               <li class="list-group-item">
                 <a href="#" class="predefined-text" data-file="2.txt">Shadow English #2 Meaning Behind the Title</a>
@@ -349,7 +347,6 @@
             const originalWordCountDiv = document.getElementById('originalWordCount');
             const transcribedWordCountDiv = document.getElementById('transcribedWordCount');
             const progressBar = document.getElementById('progressBar');
-            const accuracyFeedback = document.getElementById('accuracyFeedback');
 
             let isReading = false;
             let finalTranscript = '';
@@ -385,23 +382,12 @@
                     startButton.classList.remove('btn-primary');
                     startButton.classList.add('btn-danger');
                     isReading = true;
-                    // Do not reset finalTranscript
-                    if (finalTranscript === '') {
-                        transcribedDiv.innerHTML = '<p><em>Listening...</em></p>';
-                    }
                     recognition.start();
                 } else {
                     // User clicked Stop Reading Aloud
                     isReading = false;
                     recognition.stop();
                     startButton.disabled = true; // Disable until recognition stops
-                    // Automatically save the transcription
-                    if (finalTranscript.trim() !== '') {
-                        const wordCount = finalTranscript.trim().split(/\s+/).filter(word => word.length > 0).length;
-                        saveTranscription(finalTranscript, wordCount);
-                        alert(`Congratulations, you just read ${wordCount} words aloud!`);
-                        // Do not reset finalTranscript
-                    }
                 }
             });
 
@@ -413,10 +399,9 @@
                 startButton.classList.add('btn-primary');
                 startButton.disabled = false;
                 isReading = false;
-                recognition.stop();
+                recognition.abort();
                 finalTranscript = '';
                 progressBar.style.width = '0%';
-                accuracyFeedback.textContent = '';
                 originalWordCountDiv.textContent = '';
                 transcribedWordCountDiv.textContent = '';
             });
@@ -432,7 +417,6 @@
                 finalTranscript = '';
                 transcribedDiv.innerHTML = '';
                 progressBar.style.width = '0%';
-                accuracyFeedback.textContent = '';
                 transcribedWordCountDiv.textContent = '';
             });
 
@@ -449,7 +433,6 @@
                 transcribedDiv.innerHTML = `<p>${finalTranscript}${interimTranscript}</p>`;
                 updateTranscribedWordCount();
                 updateProgress();
-                updateAccuracyFeedback();
             });
 
             recognition.addEventListener('end', () => {
@@ -549,7 +532,7 @@
                 });
             });
 
-            // Progress Bar and Accuracy Feedback
+            // Progress Bar
             function updateProgress() {
                 const originalText = originalTextArea.value.trim();
                 const transcribedText = finalTranscript.trim();
@@ -561,30 +544,6 @@
                 progressPercent = Math.min(progressPercent, 100); // Cap at 100%
 
                 progressBar.style.width = progressPercent + '%';
-            }
-
-            function updateAccuracyFeedback() {
-                const originalText = originalTextArea.value.trim().toLowerCase().replace(/[^\w\s]/gi, '');
-                const transcribedText = finalTranscript.trim().toLowerCase().replace(/[^\w\s]/gi, '');
-
-                const originalWords = originalText.split(/\s+/).filter(word => word.length > 0);
-                const transcribedWords = transcribedText.split(/\s+/).filter(word => word.length > 0);
-
-                let matches = 0;
-                let totalWords = originalWords.length;
-
-                const transcribedWordsSet = new Set(transcribedWords);
-
-                originalWords.forEach(word => {
-                    if (transcribedWordsSet.has(word)) {
-                        matches++;
-                    }
-                });
-
-                let accuracy = (matches / totalWords) * 100;
-                accuracy = accuracy.toFixed(2);
-
-                accuracyFeedback.textContent = `Accuracy: ${accuracy}%`;
             }
 
         } else {
