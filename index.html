@@ -91,13 +91,19 @@
             color: #000;
             height: 400px;
             overflow-y: auto;
-            position: relative;
         }
-        #transcribedWordCount {
-            text-align: right;
+        #progressContainer {
+            margin-top: 10px;
+        }
+        .progress {
+            height: 20px;
+        }
+        .progress-bar {
+            background-color: #28a745;
+        }
+        #accuracyFeedback, #transcribedWordCount {
             font-size: 14px;
             color: #fff;
-            margin-top: 5px;
         }
         /* Updated Save Button Styles */
         #saveButton {
@@ -113,22 +119,6 @@
         }
         #saveButton:hover {
             background-color: #e6c200;
-        }
-        #progressContainer {
-            margin-top: 10px;
-        }
-        .progress {
-            height: 20px;
-        }
-        .progress-bar {
-            background-color: #28a745;
-        }
-        #accuracyFeedback {
-            position: absolute;
-            bottom: 5px;
-            left: 10px;
-            font-size: 14px;
-            color: #fff;
         }
         #savedTranscriptions {
             background-color: rgba(255, 255, 255, 0.9);
@@ -171,21 +161,21 @@
         /* Media Queries for Mobile Devices */
         @media (max-width: 767.98px) {
             /* Adjust text area heights */
-            #originalText, #transcribedText, #savedTranscriptions {
+            #originalText {
+                height: 300px;
+            }
+            #transcribedText, #savedTranscriptions {
                 height: auto;
                 max-height: none;
             }
-
             /* Adjust font sizes for readability */
             body {
                 font-size: 16px;
             }
-
             h1 {
                 font-size: 22px;
                 margin-bottom: 20px;
             }
-
             /* Adjust button sizes and spacing */
             #startButton, #resetButton, #saveButton, #selectTextButton {
                 width: 100%;
@@ -193,26 +183,21 @@
                 padding: 12px;
                 margin-top: 10px;
             }
-
             #buttonGroup {
                 flex-direction: column;
             }
-
             #buttonGroup button {
                 margin-bottom: 10px;
             }
-
             /* Adjust padding */
             .left-column, .right-column {
                 padding: 10px;
             }
-
             /* Adjust footer */
             footer {
                 font-size: 14px;
                 padding: 5px;
             }
-
             /* Adjust the saved transcriptions section margin */
             .saved-transcriptions-section {
                 margin-top: 20px;
@@ -287,10 +272,12 @@
             <div class="col-md-6 col-sm-12 right-column">
                 <div class="transcription-section">
                     <h3>Transcription</h3>
-                    <div id="transcribedText">
+                    <div id="transcribedText"></div>
+                    <!-- Transcription Stats -->
+                    <div id="transcribedStats" style="display: flex; justify-content: space-between; margin-top: 5px;">
                         <div id="accuracyFeedback"></div>
+                        <div id="transcribedWordCount"></div>
                     </div>
-                    <div id="transcribedWordCount"></div>
                     <!-- Progress Bar -->
                     <div id="progressContainer">
                         <div class="progress mt-2">
@@ -301,6 +288,7 @@
                 </div>
                 <div class="saved-transcriptions-section">
                     <h3>Saved Transcriptions</h3>
+                    <div id="totalWordsRead" style="font-weight: bold; margin-bottom: 10px;">Total Words Read: 0</div>
                     <div id="savedTranscriptions"></div>
                 </div>
             </div>
@@ -323,10 +311,10 @@
           <div class="modal-body">
             <ul class="list-group">
               <li class="list-group-item">
-                <a href="#" class="predefined-text" data-file="1.txt">Shadow English #1 Introduction</a>
+                <a href="#" class="predefined-text" data-file="#1 Introduction.txt">Shadow English #1 Introduction</a>
               </li>
               <li class="list-group-item">
-                <a href="#" class="predefined-text" data-file="2.txt">Shadow English #2 Meaning Behind the Title</a>
+                <a href="#" class="predefined-text" data-file="#2 Meaning Behind the Title.txt">Shadow English #2 Meaning Behind the Title</a>
               </li>
               <!-- Add more options as needed -->
             </ul>
@@ -393,18 +381,27 @@
                         return;
                     }
                     recognition.lang = languageSelect.value;
-                    startButton.textContent = 'Stop';
+                    startButton.textContent = 'Stop Reading Aloud';
                     startButton.classList.remove('btn-primary');
                     startButton.classList.add('btn-danger');
                     isReading = true;
-                    finalTranscript = '';
-                    transcribedDiv.innerHTML = '<p><em>Listening...</em></p>';
+                    // Do not reset finalTranscript
+                    if (finalTranscript === '') {
+                        transcribedDiv.innerHTML = '<p><em>Listening...</em></p>';
+                    }
                     recognition.start();
                 } else {
-                    // User clicked Stop
+                    // User clicked Stop Reading Aloud
                     isReading = false;
                     recognition.stop();
                     startButton.disabled = true; // Disable until recognition stops
+                    // Automatically save the transcription
+                    if (finalTranscript.trim() !== '') {
+                        const wordCount = finalTranscript.trim().split(/\s+/).filter(word => word.length > 0).length;
+                        saveTranscription(finalTranscript, wordCount);
+                        alert(`Congratulations, you just read ${wordCount} words aloud!`);
+                        // Do not reset finalTranscript
+                    }
                 }
             });
 
@@ -494,7 +491,9 @@
             function displaySavedTranscriptions() {
                 const savedTranscriptions = JSON.parse(localStorage.getItem('savedTranscriptions')) || [];
                 savedTranscriptionsDiv.innerHTML = '';
+                let totalWordsRead = 0;
                 savedTranscriptions.reverse().forEach((item, index) => {
+                    totalWordsRead += item.wordCount || 0;
                     const div = document.createElement('div');
                     div.classList.add('saved-transcription-item');
                     div.innerHTML = `
@@ -504,6 +503,9 @@
                     `;
                     savedTranscriptionsDiv.appendChild(div);
                 });
+                // Update total words read
+                const totalWordsReadDiv = document.getElementById('totalWordsRead');
+                totalWordsReadDiv.textContent = `Total Words Read: ${totalWordsRead}`;
 
                 // Add event listeners for delete buttons
                 const deleteButtons = savedTranscriptionsDiv.querySelectorAll('.delete-button');
