@@ -41,6 +41,12 @@
             height: 400px;
             resize: vertical;
         }
+        #originalWordCount {
+            text-align: right;
+            font-size: 14px;
+            color: #fff;
+            margin-top: 5px;
+        }
         #startButton, #resetButton {
             width: 100%;
             padding: 12px;
@@ -85,6 +91,13 @@
             color: #000;
             height: 400px;
             overflow-y: auto;
+            position: relative;
+        }
+        #transcribedWordCount {
+            text-align: right;
+            font-size: 14px;
+            color: #fff;
+            margin-top: 5px;
         }
         /* Updated Save Button Styles */
         #saveButton {
@@ -100,6 +113,22 @@
         }
         #saveButton:hover {
             background-color: #e6c200;
+        }
+        #progressContainer {
+            margin-top: 10px;
+        }
+        .progress {
+            height: 20px;
+        }
+        .progress-bar {
+            background-color: #28a745;
+        }
+        #accuracyFeedback {
+            position: absolute;
+            bottom: 5px;
+            left: 10px;
+            font-size: 14px;
+            color: #fff;
         }
         #savedTranscriptions {
             background-color: rgba(255, 255, 255, 0.9);
@@ -242,11 +271,13 @@
                         <!-- Add more languages as needed -->
                     </select>
                 </div>
+                <!-- Select Podcast Episode Button -->
+                <button id="selectTextButton" class="btn">Select Podcast Episode</button>
                 <div class="form-group">
                     <label for="originalText">Select, type, or paste what you want to read aloud here.</label>
                     <textarea id="originalText" class="form-control" placeholder="Enter text to practice reading aloud"></textarea>
+                    <div id="originalWordCount"></div>
                 </div>
-                <button id="selectTextButton" class="btn">Select Text</button>
                 <div id="buttonGroup">
                     <button id="startButton" class="btn btn-primary">Read Aloud</button>
                     <button id="resetButton" class="btn btn-secondary">Reset</button>
@@ -256,7 +287,16 @@
             <div class="col-md-6 col-sm-12 right-column">
                 <div class="transcription-section">
                     <h3>Transcription</h3>
-                    <div id="transcribedText"></div>
+                    <div id="transcribedText">
+                        <div id="accuracyFeedback"></div>
+                    </div>
+                    <div id="transcribedWordCount"></div>
+                    <!-- Progress Bar -->
+                    <div id="progressContainer">
+                        <div class="progress mt-2">
+                            <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%;"></div>
+                        </div>
+                    </div>
                     <button id="saveButton">Save Transcription</button>
                 </div>
                 <div class="saved-transcriptions-section">
@@ -275,7 +315,7 @@
       <div class="modal-dialog">
         <div class="modal-content" style="color: #000;">
           <div class="modal-header">
-            <h5 class="modal-title" id="selectTextModalLabel">Select Text</h5>
+            <h5 class="modal-title" id="selectTextModalLabel">Select Podcast Episode</h5>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
@@ -283,10 +323,10 @@
           <div class="modal-body">
             <ul class="list-group">
               <li class="list-group-item">
-                <a href="#" class="predefined-text" data-file="1.html">Shadow English #1 Introduction</a>
+                <a href="#" class="predefined-text" data-file="#1 Introduction.txt">Shadow English #1 Introduction</a>
               </li>
               <li class="list-group-item">
-                <a href="#" class="predefined-text" data-file="2.html">Shadow English #2 Meaning Behind the Title</a>
+                <a href="#" class="predefined-text" data-file="#2 Meaning Behind the Title.txt">Shadow English #2 Meaning Behind the Title</a>
               </li>
               <!-- Add more options as needed -->
             </ul>
@@ -318,12 +358,33 @@
             const transcribedDiv = document.getElementById('transcribedText');
             const savedTranscriptionsDiv = document.getElementById('savedTranscriptions');
             const languageSelect = document.getElementById('languageSelect');
+            const originalWordCountDiv = document.getElementById('originalWordCount');
+            const transcribedWordCountDiv = document.getElementById('transcribedWordCount');
+            const progressBar = document.getElementById('progressBar');
+            const accuracyFeedback = document.getElementById('accuracyFeedback');
 
             let isReading = false;
             let finalTranscript = '';
+            let originalTextWords = [];
 
             // Load saved transcriptions from localStorage
             loadSavedTranscriptions();
+
+            // Update word count for original text
+            function updateOriginalWordCount() {
+                const text = originalTextArea.value.trim();
+                const words = text.split(/\s+/).filter(word => word.length > 0);
+                originalWordCountDiv.textContent = `Word Count: ${words.length}`;
+                originalTextWords = words;
+            }
+
+            originalTextArea.addEventListener('input', updateOriginalWordCount);
+
+            // Update word count for transcribed text
+            function updateTranscribedWordCount() {
+                const words = finalTranscript.trim().split(/\s+/).filter(word => word.length > 0);
+                transcribedWordCountDiv.textContent = `Word Count: ${words.length}`;
+            }
 
             startButton.addEventListener('click', () => {
                 if (!isReading) {
@@ -357,6 +418,10 @@
                 isReading = false;
                 recognition.stop();
                 finalTranscript = '';
+                progressBar.style.width = '0%';
+                accuracyFeedback.textContent = '';
+                originalWordCountDiv.textContent = '';
+                transcribedWordCountDiv.textContent = '';
             });
 
             saveButton.addEventListener('click', () => {
@@ -364,10 +429,14 @@
                     alert('There is no transcription to save.');
                     return;
                 }
-                saveTranscription(finalTranscript);
-                alert('Transcription saved!');
+                const wordCount = finalTranscript.trim().split(/\s+/).filter(word => word.length > 0).length;
+                saveTranscription(finalTranscript, wordCount);
+                alert(`Congratulations, you just read ${wordCount} words aloud!`);
                 finalTranscript = '';
                 transcribedDiv.innerHTML = '';
+                progressBar.style.width = '0%';
+                accuracyFeedback.textContent = '';
+                transcribedWordCountDiv.textContent = '';
             });
 
             recognition.addEventListener('result', (event) => {
@@ -381,6 +450,9 @@
                     }
                 }
                 transcribedDiv.innerHTML = `<p>${finalTranscript}${interimTranscript}</p>`;
+                updateTranscribedWordCount();
+                updateProgress();
+                updateAccuracyFeedback();
             });
 
             recognition.addEventListener('end', () => {
@@ -407,10 +479,10 @@
                 isReading = false;
             });
 
-            function saveTranscription(transcription) {
+            function saveTranscription(transcription, wordCount) {
                 let savedTranscriptions = JSON.parse(localStorage.getItem('savedTranscriptions')) || [];
                 const timestamp = new Date().toLocaleString();
-                savedTranscriptions.push({ timestamp, transcription });
+                savedTranscriptions.push({ timestamp, transcription, wordCount });
                 localStorage.setItem('savedTranscriptions', JSON.stringify(savedTranscriptions));
                 displaySavedTranscriptions();
             }
@@ -427,7 +499,7 @@
                     div.classList.add('saved-transcription-item');
                     div.innerHTML = `
                         <button class="delete-button" data-index="${index}">&times;</button>
-                        <p><strong>${item.timestamp}</strong></p>
+                        <p><strong>${item.timestamp}</strong> | Words Read: ${item.wordCount}</p>
                         <p>${item.transcription}</p>
                     `;
                     savedTranscriptionsDiv.appendChild(div);
@@ -463,13 +535,9 @@
                     const file = link.getAttribute('data-file');
                     fetch(file)
                         .then(response => response.text())
-                        .then(htmlString => {
-                            // Parse the HTML string into a document
-                            const parser = new DOMParser();
-                            const doc = parser.parseFromString(htmlString, 'text/html');
-                            // Extract text content from the body
-                            const textContent = doc.body.textContent || "";
-                            originalTextArea.value = textContent.trim();
+                        .then(data => {
+                            originalTextArea.value = data.trim();
+                            updateOriginalWordCount();
                             $('#selectTextModal').modal('hide');
                         })
                         .catch(error => {
@@ -478,6 +546,44 @@
                         });
                 });
             });
+
+            // Progress Bar and Accuracy Feedback
+            function updateProgress() {
+                const originalText = originalTextArea.value.trim();
+                const transcribedText = finalTranscript.trim();
+
+                const originalWords = originalText.split(/\s+/).filter(word => word.length > 0);
+                const transcribedWords = transcribedText.split(/\s+/).filter(word => word.length > 0);
+
+                let progressPercent = (transcribedWords.length / originalWords.length) * 100;
+                progressPercent = Math.min(progressPercent, 100); // Cap at 100%
+
+                progressBar.style.width = progressPercent + '%';
+            }
+
+            function updateAccuracyFeedback() {
+                const originalText = originalTextArea.value.trim().toLowerCase().replace(/[^\w\s]/gi, '');
+                const transcribedText = finalTranscript.trim().toLowerCase().replace(/[^\w\s]/gi, '');
+
+                const originalWords = originalText.split(/\s+/).filter(word => word.length > 0);
+                const transcribedWords = transcribedText.split(/\s+/).filter(word => word.length > 0);
+
+                let matches = 0;
+                let totalWords = originalWords.length;
+
+                const transcribedWordsSet = new Set(transcribedWords);
+
+                originalWords.forEach(word => {
+                    if (transcribedWordsSet.has(word)) {
+                        matches++;
+                    }
+                });
+
+                let accuracy = (matches / totalWords) * 100;
+                accuracy = accuracy.toFixed(2);
+
+                accuracyFeedback.textContent = `Accuracy: ${accuracy}%`;
+            }
 
         } else {
             alert('Sorry, your browser does not support speech recognition.');
