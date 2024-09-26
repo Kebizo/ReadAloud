@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Read Aloud Practice</title>
+    <!-- Add viewport meta tag -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .container {
+            flex: 1;
+            max-width: 1200px;
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+        h1 {
+            text-align: center;
+            font-weight: 600;
+            margin-bottom: 30px;
+        }
+        .form-group label {
+            font-weight: 600;
+        }
+        #originalText {
+            background-color: rgba(255, 255, 255, 0.9);
+            color: #000;
+            height: 400px;
+            resize: vertical;
+        }
+        #startButton, #resetButton {
+            width: 100%;
+            padding: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            margin-top: 10px;
+            border: none;
+            border-radius: 5px;
+        }
+        #startButton {
+            background-color: #28a745;
+            color: #fff;
+        }
+        #resetButton {
+            background-color: #dc3545;
+            color: #fff;
+        }
+        #startButton:hover {
+            background-color: #218838;
+        }
+        #resetButton:hover {
+            background-color: #c82333;
+        }
+        #transcribedText {
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 5px;
+            color: #000;
+            height: 400px;
+            overflow-y: auto;
+        }
+        /* Updated Save Button Styles */
+        #saveButton {
+            width: 100%;
+            padding: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            margin-top: 10px;
+            background-color: #ffd700; /* Yellow-gold color */
+            color: #000;
+            border: none;
+            border-radius: 5px;
+        }
+        #saveButton:hover {
+            background-color: #e6c200;
+        }
+        #savedTranscriptions {
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 5px;
+            color: #000;
+            height: 400px;
+            overflow-y: auto;
+            margin-top: 30px;
+        }
+        footer {
+            text-align: center;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.2);
+        }
+        @media (min-width: 768px) {
+            #startButton, #resetButton {
+                width: 48%;
+                margin-top: 0;
+            }
+            #buttonGroup {
+                display: flex;
+                justify-content: space-between;
+            }
+        }
+        .left-column, .right-column {
+            padding: 15px;
+        }
+        .left-column {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+        }
+        .right-column {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+        }
+        .transcription-section {
+            flex: 1;
+        }
+        .saved-transcriptions-section {
+            flex: 1;
+            margin-top: 20px;
+        }
+        .saved-transcription-item {
+            background-color: rgba(0, 123, 255, 0.1);
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        .saved-transcription-item p {
+            margin: 0;
+        }
+
+        /* Media Queries for Mobile Devices */
+        @media (max-width: 767.98px) {
+            /* Adjust text area heights */
+            #originalText, #transcribedText, #savedTranscriptions {
+                height: auto;
+                max-height: none;
+            }
+
+            /* Adjust font sizes for readability */
+            body {
+                font-size: 16px;
+            }
+
+            h1 {
+                font-size: 22px;
+                margin-bottom: 20px;
+            }
+
+            /* Adjust button sizes and spacing */
+            #startButton, #resetButton, #saveButton {
+                width: 100%;
+                font-size: 16px;
+                padding: 12px;
+                margin-top: 10px;
+            }
+
+            #buttonGroup {
+                flex-direction: column;
+            }
+
+            #buttonGroup button {
+                margin-bottom: 10px;
+            }
+
+            /* Adjust padding */
+            .left-column, .right-column {
+                padding: 10px;
+            }
+
+            /* Adjust footer */
+            footer {
+                font-size: 14px;
+                padding: 5px;
+            }
+
+            /* Adjust the saved transcriptions section margin */
+            .saved-transcriptions-section {
+                margin-top: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Read Aloud Practice</h1>
+        <div class="row">
+            <!-- Left Column -->
+            <div class="col-md-6 col-sm-12 left-column">
+                <!-- Language Selector -->
+                <div class="form-group">
+                    <label for="languageSelect">Choose Language:</label>
+                    <select id="languageSelect" class="form-control">
+                        <option value="en-US">English (US)</option>
+                        <option value="en-GB">English (UK)</option>
+                        <option value="es-ES">Spanish (Spain)</option>
+                        <option value="es-MX">Spanish (Mexico)</option>
+                        <option value="fr-FR">French (France)</option>
+                        <option value="de-DE">German</option>
+                        <option value="it-IT">Italian</option>
+                        <option value="pt-BR">Portuguese (Brazil)</option>
+                        <option value="pt-PT">Portuguese (Portugal)</option>
+                        <option value="ru-RU">Russian</option>
+                        <option value="ja-JP">Japanese</option>
+                        <option value="ko-KR">Korean</option>
+                        <option value="zh-CN">Chinese (Mandarin)</option>
+                        <option value="hi-IN">Hindi</option>
+                        <option value="ar-SA">Arabic (Saudi Arabia)</option>
+                        <option value="ar-EG">Arabic (Egypt)</option>
+                        <option value="nl-NL">Dutch</option>
+                        <option value="tr-TR">Turkish</option>
+                        <option value="pl-PL">Polish</option>
+                        <option value="sv-SE">Swedish</option>
+                        <!-- Add more languages as needed -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="originalText">Type or paste what you want to read aloud here!</label>
+                    <textarea id="originalText" class="form-control" placeholder="Enter text to practice reading aloud"></textarea>
+                </div>
+                <div id="buttonGroup">
+                    <button id="startButton" class="btn btn-primary">Read Aloud</button>
+                    <button id="resetButton" class="btn btn-secondary">Reset</button>
+                </div>
+            </div>
+            <!-- Right Column -->
+            <div class="col-md-6 col-sm-12 right-column">
+                <div class="transcription-section">
+                    <h3>Transcription</h3>
+                    <div id="transcribedText"></div>
+                    <button id="saveButton">Save Transcription</button>
+                </div>
+                <div class="saved-transcriptions-section">
+                    <h3>Saved Transcriptions</h3>
+                    <div id="savedTranscriptions"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <footer>
+        <p>&copy; 2024 Read Aloud App</p>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // Check for browser support
+        window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+        if ('SpeechRecognition' in window) {
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'en-US';
+            recognition.interimResults = true; // Enable interim results for real-time transcription
+            recognition.continuous = true; // Keep recognition running until stopped by the user
+
+            const startButton = document.getElementById('startButton');
+            const resetButton = document.getElementById('resetButton');
+            const saveButton = document.getElementById('saveButton');
+            const originalTextArea = document.getElementById('originalText');
+            const transcribedDiv = document.getElementById('transcribedText');
+            const savedTranscriptionsDiv = document.getElementById('savedTranscriptions');
+            const languageSelect = document.getElementById('languageSelect');
+
+            let isReading = false;
+            let finalTranscript = '';
+
+            // Load saved transcriptions from localStorage
+            loadSavedTranscriptions();
+
+            startButton.addEventListener('click', () => {
+                if (!isReading) {
+                    if (originalTextArea.value.trim() === '') {
+                        alert('Please paste text into the input area before starting.');
+                        return;
+                    }
+                    recognition.lang = languageSelect.value;
+                    startButton.textContent = 'Stop';
+                    startButton.classList.remove('btn-primary');
+                    startButton.classList.add('btn-danger');
+                    isReading = true;
+                    finalTranscript = '';
+                    transcribedDiv.innerHTML = '<p><em>Listening...</em></p>';
+                    recognition.start();
+                } else {
+                    // User clicked Stop
+                    isReading = false;
+                    recognition.stop();
+                    startButton.disabled = true; // Disable until recognition stops
+                }
+            });
+
+            resetButton.addEventListener('click', () => {
+                originalTextArea.value = '';
+                transcribedDiv.innerHTML = '';
+                startButton.textContent = 'Read Aloud';
+                startButton.classList.remove('btn-danger');
+                startButton.classList.add('btn-primary');
+                startButton.disabled = false;
+                isReading = false;
+                recognition.stop();
+                finalTranscript = '';
+            });
+
+            saveButton.addEventListener('click', () => {
+                if (finalTranscript.trim() === '') {
+                    alert('There is no transcription to save.');
+                    return;
+                }
+                saveTranscription(finalTranscript);
+                alert('Transcription saved!');
+                finalTranscript = '';
+                transcribedDiv.innerHTML = '';
+            });
+
+            recognition.addEventListener('result', (event) => {
+                let interimTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    const transcript = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) {
+                        finalTranscript += transcript + ' ';
+                    } else {
+                        interimTranscript += transcript;
+                    }
+                }
+                transcribedDiv.innerHTML = `<p>${finalTranscript}${interimTranscript}</p>`;
+            });
+
+            recognition.addEventListener('end', () => {
+                if (isReading) {
+                    // Restart recognition to keep it running
+                    recognition.start();
+                } else {
+                    // Recognition stopped by user
+                    startButton.textContent = 'Read Aloud';
+                    startButton.classList.remove('btn-danger');
+                    startButton.classList.add('btn-primary');
+                    startButton.disabled = false;
+                }
+            });
+
+            recognition.addEventListener('error', (event) => {
+                if (event.error !== 'aborted') {
+                    alert('An error occurred during speech recognition: ' + event.error);
+                }
+                startButton.textContent = 'Read Aloud';
+                startButton.classList.remove('btn-danger');
+                startButton.classList.add('btn-primary');
+                startButton.disabled = false;
+                isReading = false;
+            });
+
+            function saveTranscription(transcription) {
+                let savedTranscriptions = JSON.parse(localStorage.getItem('savedTranscriptions')) || [];
+                const timestamp = new Date().toLocaleString();
+                savedTranscriptions.push({ timestamp, transcription });
+                localStorage.setItem('savedTranscriptions', JSON.stringify(savedTranscriptions));
+                displaySavedTranscriptions();
+            }
+
+            function loadSavedTranscriptions() {
+                displaySavedTranscriptions();
+            }
+
+            function displaySavedTranscriptions() {
+                const savedTranscriptions = JSON.parse(localStorage.getItem('savedTranscriptions')) || [];
+                savedTranscriptionsDiv.innerHTML = '';
+                savedTranscriptions.reverse().forEach((item) => {
+                    const div = document.createElement('div');
+                    div.classList.add('saved-transcription-item');
+                    div.innerHTML = `<p><strong>${item.timestamp}</strong></p><p>${item.transcription}</p>`;
+                    savedTranscriptionsDiv.appendChild(div);
+                });
+            }
+        } else {
+            alert('Sorry, your browser does not support speech recognition.');
+        }
+    </script>
+</body>
+</html>
