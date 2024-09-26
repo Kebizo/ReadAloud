@@ -304,12 +304,216 @@
     </div>
 
     <!-- JavaScript -->
-    <!-- Include jQuery and Bootstrap JS for modals -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
     <script>
-        // Your existing JS code
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecognition) {
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'en-US';
+            recognition.interimResults = true; 
+            recognition.continuous = true; 
+
+            const startButton = document.getElementById('startButton');
+            const resetButton = document.getElementById('resetButton');
+            const saveButton = document.getElementById('saveButton');
+            const selectTextButton = document.getElementById('selectTextButton');
+            const originalTextArea = document.getElementById('originalText');
+            const transcribedDiv = document.getElementById('transcribedText');
+            const savedTranscriptionsDiv = document.getElementById('savedTranscriptions');
+            const languageSelect = document.getElementById('languageSelect');
+            const originalWordCountDiv = document.getElementById('originalWordCount');
+            const transcribedWordCountDiv = document.getElementById('transcribedWordCount');
+            const progressBar = document.getElementById('progressBar');
+
+            let isReading = false;
+            let finalTranscript = '';
+            let originalTextWords = [];
+
+            // Load saved transcriptions from localStorage
+            loadSavedTranscriptions();
+
+            // Update word count for original text
+            function updateOriginalWordCount() {
+                const text = originalTextArea.value.trim();
+                const words = text.split(/\s+/).filter(word => word.length > 0);
+                originalWordCountDiv.textContent = `Word Count: ${words.length}`;
+                originalTextWords = words;
+            }
+
+            originalTextArea.addEventListener('input', updateOriginalWordCount);
+
+            function updateTranscribedWordCount() {
+                const words = finalTranscript.trim().split(/\s+/).filter(word => word.length > 0);
+                transcribedWordCountDiv.textContent = `Word Count: ${words.length}`;
+            }
+
+            startButton.addEventListener('click', () => {
+                if (!isReading) {
+                    if (originalTextArea.value.trim() === '') {
+                        alert('Please select, type, or paste text into the input area before starting.');
+                        return;
+                    }
+                    recognition.lang = languageSelect.value;
+                    startButton.textContent = 'Stop Reading Aloud';
+                    startButton.classList.remove('btn-primary');
+                    startButton.classList.add('btn-danger');
+                    isReading = true;
+                    finalTranscript = ''; 
+                    recognition.start();
+                } else {
+                    isReading = false;
+                    recognition.stop();
+                    startButton.disabled = true;
+                }
+            });
+
+            resetButton.addEventListener('click', () => {
+                originalTextArea.value = '';
+                transcribedDiv.innerHTML = '';
+                startButton.textContent = 'Read Aloud';
+                startButton.classList.remove('btn-danger');
+                startButton.classList.add('btn-primary');
+                startButton.disabled = false;
+                isReading = false;
+                recognition.abort();
+                finalTranscript = '';
+                progressBar.style.width = '0%';
+                originalWordCountDiv.textContent = '';
+                transcribedWordCountDiv.textContent = '';
+            });
+
+            saveButton.addEventListener('click', () => {
+                if (finalTranscript.trim() === '') {
+                    alert('There is no transcription to save.');
+                    return;
+                }
+                const wordCount = finalTranscript.trim().split(/\s+/).filter(word => word.length > 0).length;
+                saveTranscription(finalTranscript, wordCount);
+                alert(`Congratulations, you just read ${wordCount} words aloud!`);
+                finalTranscript = '';
+                transcribedDiv.innerHTML = '';
+                progressBar.style.width = '0%';
+                transcribedWordCountDiv.textContent = '';
+            });
+
+            recognition.addEventListener('result', (event) => {
+                let interimTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    const transcript = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) {
+                        finalTranscript += transcript + ' ';
+                    } else {
+                        interimTranscript += transcript;
+                    }
+                }
+                transcribedDiv.innerHTML = `<p>${finalTranscript}${interimTranscript}</p>`;
+                updateTranscribedWordCount();
+                updateProgress();
+            });
+
+            recognition.addEventListener('end', () => {
+                if (isReading) {
+                    recognition.start();
+                } else {
+                    startButton.textContent = 'Read Aloud';
+                    startButton.classList.remove('btn-danger');
+                    startButton.classList.add('btn-primary');
+                    startButton.disabled = false;
+                }
+            });
+
+            recognition.addEventListener('error', (event) => {
+                if (event.error !== 'aborted') {
+                    alert('An error occurred during speech recognition: ' + event.error);
+                }
+                startButton.textContent = 'Read Aloud';
+                startButton.classList.remove('btn-danger');
+                startButton.classList.add('btn-primary');
+                startButton.disabled = false;
+                isReading = false;
+            });
+
+            function saveTranscription(transcription, wordCount) {
+                let savedTranscriptions = JSON.parse(localStorage.getItem('savedTranscriptions')) || [];
+                const timestamp = new Date().toLocaleString();
+                savedTranscriptions.push({ timestamp, transcription, wordCount });
+                localStorage.setItem('savedTranscriptions', JSON.stringify(savedTranscriptions));
+                displaySavedTranscriptions();
+            }
+
+            function loadSavedTranscriptions() {
+                displaySavedTranscriptions();
+            }
+
+            function displaySavedTranscriptions() {
+                const savedTranscriptions = JSON.parse(localStorage.getItem('savedTranscriptions')) || [];
+                savedTranscriptionsDiv.innerHTML = '';
+                let totalWordsRead = 0;
+                savedTranscriptions.reverse().forEach((item, index) => {
+                    totalWordsRead += item.wordCount || 0;
+                    const div = document.createElement('div');
+                    div.classList.add('saved-transcription-item');
+                    div.innerHTML = `
+                        <button class="delete-button" data-index="${index}">&times;</button>
+                        <p><strong>${item.timestamp}</strong> | Words Read: ${item.wordCount}</p>
+                        <p>${item.transcription}</p>
+                    `;
+                    savedTranscriptionsDiv.appendChild(div);
+                });
+                const totalWordsReadDiv = document.getElementById('totalWordsRead');
+                totalWordsReadDiv.textContent = `Total Words Read: ${totalWordsRead}`;
+
+                const deleteButtons = savedTranscriptionsDiv.querySelectorAll('.delete-button');
+                deleteButtons.forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const index = e.target.getAttribute('data-index');
+                        deleteTranscription(index);
+                    });
+                });
+            }
+
+            function deleteTranscription(index) {
+                let savedTranscriptions = JSON.parse(localStorage.getItem('savedTranscriptions')) || [];
+                savedTranscriptions.splice(savedTranscriptions.length - 1 - index, 1);
+                localStorage.setItem('savedTranscriptions', JSON.stringify(savedTranscriptions));
+                displaySavedTranscriptions();
+            }
+
+            function updateProgress() {
+                const transcribedWords = finalTranscript.trim().split(/\s+/).filter(word => word.length > 0);
+                const progress = Math.min((transcribedWords.length / originalTextWords.length) * 100, 100);
+                progressBar.style.width = `${progress}%`;
+                progressBar.setAttribute('aria-valuenow', progress);
+            }
+
+            selectTextButton.addEventListener('click', () => {
+                $('#selectTextModal').modal('show');
+            });
+
+            const predefinedTexts = document.querySelectorAll('.predefined-text');
+            predefinedTexts.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const file = link.getAttribute('data-file');
+                    fetch(file)
+                        .then(response => response.text())
+                        .then(data => {
+                            originalTextArea.value = data;
+                            $('#selectTextModal').modal('hide');
+                            updateOriginalWordCount();
+                        })
+                        .catch(error => {
+                            console.error('Error fetching text:', error);
+                            alert('An error occurred while fetching the text.');
+                        });
+                });
+            });
+
+        } else {
+            alert('Sorry, your browser does not support speech recognition.');
+        }
     </script>
 </body>
 </html>
