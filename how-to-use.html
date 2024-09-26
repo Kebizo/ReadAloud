@@ -22,6 +22,7 @@
             justify-content: center;
             align-items: center;
             padding: 20px;
+            position: relative;
         }
 
         /* Container for the content */
@@ -33,6 +34,7 @@
             max-width: 900px;
             width: 100%;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            margin-top: 60px; /* Adjusting for the button */
         }
 
         h1 {
@@ -71,24 +73,23 @@
             font-size: 1.1rem;
         }
 
-        /* Back button styling */
-        
+        /* Back Button */
         .back-button {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    background-color: rgba(255, 255, 255, 0.2);
-    color: #FFFFFF;
-    padding: 10px 20px;
-    border-radius: 5px;
-    text-decoration: none;
-    font-size: 1.2rem;
-    transition: background-color 0.3s ease;
-}
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: #FFFFFF;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 1.2rem;
+            transition: background-color 0.3s ease;
+        }
 
-.back-button:hover {
-    background-color: rgba(255, 255, 255, 0.4);
-}
+        .back-button:hover {
+            background-color: rgba(255, 255, 255, 0.4);
+        }
 
         /* Responsive design */
         @media (max-width: 768px) {
@@ -104,16 +105,16 @@
                 padding: 10px;
                 font-size: 1rem;
             }
+
+            .container {
+                margin-top: 40px; /* Adjusted for smaller screens */
+            }
         }
     </style>
-    <script>
-        // JavaScript function to navigate to the previous page
-        function goBack() {
-            window.history.back();
-        }
-    </script>
 </head>
 <body>
+
+<a href="javascript:history.back()" class="back-button">← Back</a>
 
 <div class="container">
     <h1>How to Use This App</h1>
@@ -169,9 +170,6 @@
     </ul>
 
     <p>Set your daily word goal today and start your journey towards fluency! Whether you're reading 100 words or 10,000 words a day, every rep brings you closer to mastering the language.</p>
-
-    <!-- Back Button -->
-<a href="javascript:history.back()" class="back-button">← Back</a>
 </div>
 
 </body>
