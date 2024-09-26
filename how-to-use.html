@@ -72,22 +72,23 @@
         }
 
         /* Back button styling */
+        
         .back-button {
-            background-color: #4F46E5;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            font-size: 1rem;
-            cursor: pointer;
-            display: block;
-            margin: 20px auto;
-            transition: background-color 0.3s ease;
-        }
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background-color: rgba(255, 255, 255, 0.2);
+    color: #FFFFFF;
+    padding: 10px 20px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-size: 1.2rem;
+    transition: background-color 0.3s ease;
+}
 
-        .back-button:hover {
-            background-color: #4338CA;
-        }
+.back-button:hover {
+    background-color: rgba(255, 255, 255, 0.4);
+}
 
         /* Responsive design */
         @media (max-width: 768px) {
@@ -170,7 +171,7 @@
     <p>Set your daily word goal today and start your journey towards fluency! Whether you're reading 100 words or 10,000 words a day, every rep brings you closer to mastering the language.</p>
 
     <!-- Back Button -->
-    <button class="back-button" onclick="goBack()">Back</button>
+<a href="javascript:history.back()" class="back-button">← Back</a>
 </div>
 
 </body>
