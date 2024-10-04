@@ -56,7 +56,7 @@
             color: #fff;
         }
         #resetButton {
-            background-color: #dc3545;
+            background-color: ##9425d9;
             color: #fff;
         }
         #recordButton {
@@ -294,7 +294,6 @@
                 </div>
                 <div id="buttonGroup">
                     <button id="startButton" class="btn btn-primary">Read Aloud</button>
-                    <div class="button-description">(Transcribe)</div>
                     <button id="recordButton" class="btn btn-danger">Record Reading</button>
                     <button id="resetButton" class="btn btn-secondary">Reset</button>
                 </div>
@@ -422,7 +421,7 @@
             resetButton.addEventListener('click', () => {
                 originalTextArea.value = '';
                 transcribedDiv.innerHTML = '';
-                startButton.textContent = 'Read Aloud';
+                startButton.textContent = 'Read Aloud (Transcribe)';
                 startButton.classList.remove('btn-danger');
                 startButton.classList.add('btn-primary');
                 startButton.disabled = false;
