@@ -40,7 +40,7 @@
         #originalText {
             background-color: rgba(255, 255, 255, 0.9);
             color: #000;
-            height: 500px; /* Increased height for better readability */
+            height: 500px;
             resize: vertical;
             font-size: 18px;
         }
@@ -72,7 +72,7 @@
             background-color: #c82333;
         }
         #recordButton:hover {
-            background-color: #878cd6;
+            background-color: #4780d0;
         }
         #selectTextButton {
             width: 100%;
@@ -93,7 +93,7 @@
             padding: 20px;
             border-radius: 5px;
             color: #000;
-            height: 500px; /* Increased height for better readability */
+            height: 500px;
             overflow-y: auto;
             font-size: 18px;
         }
@@ -132,18 +132,16 @@
             margin: 0;
         }
         .delete-button, .delete-recording-button {
-            position: absolute;
-            top: 5px;
-            right: 5px;
             background-color: transparent;
             border: none;
             color: #dc3545;
-            font-size: 18px;
+            font-size: 16px;
             line-height: 1;
             cursor: pointer;
         }
         .delete-button:hover, .delete-recording-button:hover {
             color: #bd2130;
+            text-decoration: underline;
         }
         footer {
             text-align: center;
@@ -154,14 +152,14 @@
         @media (max-width: 767.98px) {
             /* Adjust text area heights */
             #originalText, #transcribedText, #savedTranscriptions {
-                height: 600px; /* Increased height for mobile readability */
+                height: 600px;
                 max-height: none;
-                font-size: 20px; /* Increase font size on mobile for readability */
+                font-size: 20px;
             }
 
             /* Adjust font sizes for readability */
             body {
-                font-size: 18px; /* Larger font for mobile */
+                font-size: 18px;
             }
 
             h1 {
@@ -229,7 +227,6 @@
         }
         .recording-item {
             margin-bottom: 15px;
-            position: relative;
         }
         .recording-item audio {
             width: 100%;
@@ -242,25 +239,27 @@
             font-size: 16px;
         }
         .recording-item a {
-            display: inline-block;
-            margin-top: 5px;
             color: #007bff;
+            margin-right: 10px;
         }
         .recording-item a:hover {
             text-decoration: underline;
         }
-        .delete-recording-button {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            background-color: transparent;
-            border: none;
-            color: #dc3545;
-            font-size: 18px;
-            line-height: 1;
-            cursor: pointer;
+        .recording-actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
         }
-        .delete-recording-button:hover {
+        .recording-actions .delete-recording-button {
+            color: #dc3545;
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-size: 16px;
+            margin-left: 10px;
+        }
+        .recording-actions .delete-recording-button:hover {
+            text-decoration: underline;
             color: #bd2130;
         }
     </style>
@@ -531,9 +530,9 @@
                     const div = document.createElement('div');
                     div.classList.add('saved-transcription-item');
                     div.innerHTML = `
-                        <button class="delete-button" data-index="${index}">&times;</button>
                         <p><strong>${item.timestamp}</strong> | Words Read: ${item.wordCount}</p>
                         <p>${item.transcription}</p>
+                        <button class="delete-button" data-index="${index}">Delete</button>
                     `;
                     savedTranscriptionsDiv.appendChild(div);
                 });
@@ -602,7 +601,7 @@
                         recorder = RecordRTC(stream, {
                             type: 'audio',
                             mimeType: 'audio/wav',
-                            desiredSampRate: 16000, // Adjust sample rate as needed
+                            desiredSampRate: 16000,
                         });
                         recorder.startRecording();
                         recordButton.textContent = 'Stop Recording';
@@ -642,6 +641,9 @@
                 input.type = 'text';
                 input.value = 'Recording_' + new Date().toLocaleString().replace(/[\s:\/]/g, '_');
 
+                const actionsDiv = document.createElement('div');
+                actionsDiv.classList.add('recording-actions');
+
                 const saveLink = document.createElement('a');
                 saveLink.href = url;
                 saveLink.download = input.value + '.wav';
@@ -655,15 +657,17 @@
                 // Delete recording button
                 const deleteRecordingButton = document.createElement('button');
                 deleteRecordingButton.classList.add('delete-recording-button');
-                deleteRecordingButton.innerHTML = '&times;';
+                deleteRecordingButton.textContent = 'Delete';
                 deleteRecordingButton.addEventListener('click', () => {
                     recordingsList.removeChild(recordingItem);
                 });
 
-                recordingItem.appendChild(deleteRecordingButton);
+                actionsDiv.appendChild(saveLink);
+                actionsDiv.appendChild(deleteRecordingButton);
+
                 recordingItem.appendChild(audio);
                 recordingItem.appendChild(input);
-                recordingItem.appendChild(saveLink);
+                recordingItem.appendChild(actionsDiv);
 
                 recordingsList.appendChild(recordingItem);
             }
