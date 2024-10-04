@@ -42,7 +42,7 @@
             resize: vertical;
             font-size: 18px;
         }
-        #startButton, #resetButton {
+        #startButton, #resetButton, #recordButton {
             width: 100%;
             padding: 12px;
             font-size: 18px;
@@ -59,10 +59,17 @@
             background-color: #dc3545;
             color: #fff;
         }
+        #recordButton {
+            background-color: #dc3545; /* Red color */
+            color: #fff;
+        }
         #startButton:hover {
             background-color: #218838;
         }
         #resetButton:hover {
+            background-color: #c82333;
+        }
+        #recordButton:hover {
             background-color: #c82333;
         }
         #selectTextButton {
@@ -161,7 +168,7 @@
             }
 
             /* Adjust button sizes and spacing */
-            #startButton, #resetButton, #saveButton, #selectTextButton {
+            #startButton, #resetButton, #saveButton, #selectTextButton, #recordButton {
                 width: 100%;
                 font-size: 18px;
                 padding: 12px;
@@ -203,6 +210,41 @@
         }
         .navbar-custom .nav-link:hover {
             color: #ccc;
+        }
+        /* Button description */
+        .button-description {
+            text-align: center;
+            font-size: 14px;
+            color: #fff;
+        }
+        /* Recordings List Styles */
+        #recordingsList {
+            margin-top: 20px;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 5px;
+            color: #000;
+        }
+        .recording-item {
+            margin-bottom: 15px;
+        }
+        .recording-item audio {
+            width: 100%;
+        }
+        .recording-item input {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            margin-bottom: 5px;
+            font-size: 16px;
+        }
+        .recording-item a {
+            display: inline-block;
+            margin-top: 5px;
+            color: #007bff;
+        }
+        .recording-item a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
@@ -252,8 +294,12 @@
                 </div>
                 <div id="buttonGroup">
                     <button id="startButton" class="btn btn-primary">Read Aloud</button>
+                    <div class="button-description">(Transcribe)</div>
+                    <button id="recordButton" class="btn btn-danger">Record Reading</button>
                     <button id="resetButton" class="btn btn-secondary">Reset</button>
                 </div>
+                <!-- Recordings List -->
+                <div id="recordingsList"></div>
             </div>
             <!-- Right Column -->
             <div class="col-md-6 col-sm-12 right-column">
@@ -326,10 +372,14 @@
             const originalWordCountDiv = document.getElementById('originalWordCount');
             const transcribedWordCountDiv = document.getElementById('transcribedWordCount');
             const progressBar = document.getElementById('progressBar');
+            const recordButton = document.getElementById('recordButton');
+            const recordingsList = document.getElementById('recordingsList');
 
             let isReading = false;
             let finalTranscript = '';
             let originalTextWords = [];
+            let mediaRecorder;
+            let recordedChunks = [];
 
             // Load saved transcriptions from localStorage
             loadSavedTranscriptions();
@@ -510,6 +560,82 @@
                         });
                 });
             });
+
+            // Recording functionality
+            recordButton.addEventListener('click', () => {
+                if (recordButton.textContent === 'Record Reading') {
+                    startRecording();
+                } else {
+                    stopRecording();
+                }
+            });
+
+            function startRecording() {
+                navigator.mediaDevices.getUserMedia({ audio: true })
+                    .then(stream => {
+                        mediaRecorder = new MediaRecorder(stream, {
+                            mimeType: 'audio/webm;codecs=opus',
+                            audioBitsPerSecond: 256000 // High quality
+                        });
+                        mediaRecorder.ondataavailable = handleDataAvailable;
+                        mediaRecorder.start();
+                        recordedChunks = [];
+                        recordButton.textContent = 'Stop Recording';
+                        recordButton.classList.remove('btn-danger');
+                        recordButton.classList.add('btn-warning');
+                    })
+                    .catch(error => {
+                        console.error('Error accessing microphone:', error);
+                        alert('An error occurred while accessing the microphone.');
+                    });
+            }
+
+            function handleDataAvailable(event) {
+                if (event.data.size > 0) {
+                    recordedChunks.push(event.data);
+                }
+            }
+
+            function stopRecording() {
+                mediaRecorder.stop();
+                recordButton.textContent = 'Record Reading';
+                recordButton.classList.remove('btn-warning');
+                recordButton.classList.add('btn-danger');
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                setTimeout(saveAudioRecording, 0);
+            }
+
+            function saveAudioRecording() {
+                const blob = new Blob(recordedChunks, { type: 'audio/webm' });
+                const url = URL.createObjectURL(blob);
+
+                const recordingItem = document.createElement('div');
+                recordingItem.classList.add('recording-item');
+
+                const audio = document.createElement('audio');
+                audio.controls = true;
+                audio.src = url;
+
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = 'Recording_' + new Date().toLocaleString().replace(/[\s:\/]/g, '_');
+
+                const saveLink = document.createElement('a');
+                saveLink.href = url;
+                saveLink.download = input.value + '.webm';
+                saveLink.textContent = 'Download';
+
+                // Update download link when file name changes
+                input.addEventListener('input', () => {
+                    saveLink.download = input.value + '.webm';
+                });
+
+                recordingItem.appendChild(audio);
+                recordingItem.appendChild(input);
+                recordingItem.appendChild(saveLink);
+
+                recordingsList.appendChild(recordingItem);
+            }
 
         } else {
             alert('Sorry, your browser does not support speech recognition.');
