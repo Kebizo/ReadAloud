@@ -11,6 +11,8 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <!-- RecordRTC Library -->
+    <script src="https://cdn.webrtc-experiment.com/RecordRTC.js"></script>
     <!-- Custom CSS -->
     <style>
         body {
@@ -56,7 +58,7 @@
             color: #fff;
         }
         #resetButton {
-            background-color: #cc1430;
+            background-color: #dc3545;
             color: #fff;
         }
         #recordButton {
@@ -129,7 +131,7 @@
         .saved-transcription-item p {
             margin: 0;
         }
-        .delete-button {
+        .delete-button, .delete-recording-button {
             position: absolute;
             top: 5px;
             right: 5px;
@@ -140,7 +142,7 @@
             line-height: 1;
             cursor: pointer;
         }
-        .delete-button:hover {
+        .delete-button:hover, .delete-recording-button:hover {
             color: #bd2130;
         }
         footer {
@@ -227,6 +229,7 @@
         }
         .recording-item {
             margin-bottom: 15px;
+            position: relative;
         }
         .recording-item audio {
             width: 100%;
@@ -246,6 +249,20 @@
         .recording-item a:hover {
             text-decoration: underline;
         }
+        .delete-recording-button {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background-color: transparent;
+            border: none;
+            color: #dc3545;
+            font-size: 18px;
+            line-height: 1;
+            cursor: pointer;
+        }
+        .delete-recording-button:hover {
+            color: #bd2130;
+        }
     </style>
 </head>
 <body>
@@ -264,6 +281,7 @@
                 <div class="form-group">
                     <label for="languageSelect">Choose Language:</label>
                     <select id="languageSelect" class="form-control">
+                        <!-- Language options -->
                         <option value="en-US">English (US)</option>
                         <option value="en-GB">English (UK)</option>
                         <option value="es-ES">Spanish (Spain)</option>
@@ -294,6 +312,7 @@
                 </div>
                 <div id="buttonGroup">
                     <button id="startButton" class="btn btn-primary">Read Aloud</button>
+                    <div class="button-description">(Transcribe)</div>
                     <button id="recordButton" class="btn btn-danger">Record Reading</button>
                     <button id="resetButton" class="btn btn-secondary">Reset</button>
                 </div>
@@ -336,12 +355,14 @@
           </div>
           <div class="modal-body">
             <ul class="list-group">
+              <!-- List of predefined texts -->
               <li class="list-group-item">
                 <a href="#" class="predefined-text" data-file="1.txt">Shadow English #1 Introduction</a>
               </li>
               <li class="list-group-item">
                 <a href="#" class="predefined-text" data-file="2.txt">Shadow English #2 Meaning Behind the Title</a>
               </li>
+              <!-- Add more episodes as needed -->
             </ul>
           </div>
         </div>
@@ -349,7 +370,11 @@
     </div>
 
     <!-- JavaScript -->
+    <!-- Include jQuery and Bootstrap JS -->
+    <!-- Note: Use the full version of jQuery if needed -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <!-- For AJAX calls, use the full version of jQuery -->
+    <!-- <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script> -->
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
     <script>
@@ -357,8 +382,8 @@
         if (SpeechRecognition) {
             const recognition = new SpeechRecognition();
             recognition.lang = 'en-US';
-            recognition.interimResults = true; 
-            recognition.continuous = true; 
+            recognition.interimResults = true;
+            recognition.continuous = true;
 
             const startButton = document.getElementById('startButton');
             const resetButton = document.getElementById('resetButton');
@@ -377,8 +402,8 @@
             let isReading = false;
             let finalTranscript = '';
             let originalTextWords = [];
-            let mediaRecorder;
-            let recordedChunks = [];
+            let recorder;
+            let stream;
 
             // Load saved transcriptions from localStorage
             loadSavedTranscriptions();
@@ -409,7 +434,7 @@
                     startButton.classList.remove('btn-primary');
                     startButton.classList.add('btn-danger');
                     isReading = true;
-                    finalTranscript = ''; 
+                    finalTranscript = '';
                     recognition.start();
                 } else {
                     isReading = false;
@@ -421,7 +446,7 @@
             resetButton.addEventListener('click', () => {
                 originalTextArea.value = '';
                 transcribedDiv.innerHTML = '';
-                startButton.textContent = 'Read Aloud (Transcribe)';
+                startButton.textContent = 'Read Aloud';
                 startButton.classList.remove('btn-danger');
                 startButton.classList.add('btn-primary');
                 startButton.disabled = false;
@@ -431,6 +456,7 @@
                 progressBar.style.width = '0%';
                 originalWordCountDiv.textContent = '';
                 transcribedWordCountDiv.textContent = '';
+                // Do not clear audio recordings
             });
 
             saveButton.addEventListener('click', () => {
@@ -560,7 +586,7 @@
                 });
             });
 
-            // Recording functionality
+            // Recording functionality using RecordRTC
             recordButton.addEventListener('click', () => {
                 if (recordButton.textContent === 'Record Reading') {
                     startRecording();
@@ -571,41 +597,38 @@
 
             function startRecording() {
                 navigator.mediaDevices.getUserMedia({ audio: true })
-                    .then(stream => {
-                        mediaRecorder = new MediaRecorder(stream, {
-                            mimeType: 'audio/webm;codecs=opus',
-                            audioBitsPerSecond: 256000 // High quality
+                    .then(s => {
+                        stream = s;
+                        recorder = RecordRTC(stream, {
+                            type: 'audio',
+                            mimeType: 'audio/wav',
+                            desiredSampRate: 16000, // Adjust sample rate as needed
                         });
-                        mediaRecorder.ondataavailable = handleDataAvailable;
-                        mediaRecorder.start();
-                        recordedChunks = [];
+                        recorder.startRecording();
                         recordButton.textContent = 'Stop Recording';
                         recordButton.classList.remove('btn-danger');
                         recordButton.classList.add('btn-warning');
                     })
                     .catch(error => {
                         console.error('Error accessing microphone:', error);
-                        alert('An error occurred while accessing the microphone.');
+                        alert('An error occurred while accessing the microphone. Please ensure you have granted microphone access in your browser settings.');
                     });
             }
 
-            function handleDataAvailable(event) {
-                if (event.data.size > 0) {
-                    recordedChunks.push(event.data);
-                }
-            }
-
             function stopRecording() {
-                mediaRecorder.stop();
+                recorder.stopRecording(() => {
+                    const blob = recorder.getBlob();
+                    saveAudioRecording(blob);
+                    stream.getTracks().forEach(track => track.stop());
+                    recorder.destroy();
+                    recorder = null;
+                });
                 recordButton.textContent = 'Record Reading';
                 recordButton.classList.remove('btn-warning');
                 recordButton.classList.add('btn-danger');
-                mediaRecorder.stream.getTracks().forEach(track => track.stop());
-                setTimeout(saveAudioRecording, 0);
             }
 
-            function saveAudioRecording() {
-                const blob = new Blob(recordedChunks, { type: 'audio/webm' });
+            function saveAudioRecording(blob) {
                 const url = URL.createObjectURL(blob);
 
                 const recordingItem = document.createElement('div');
@@ -621,14 +644,23 @@
 
                 const saveLink = document.createElement('a');
                 saveLink.href = url;
-                saveLink.download = input.value + '.webm';
+                saveLink.download = input.value + '.wav';
                 saveLink.textContent = 'Download';
 
                 // Update download link when file name changes
                 input.addEventListener('input', () => {
-                    saveLink.download = input.value + '.webm';
+                    saveLink.download = input.value + '.wav';
                 });
 
+                // Delete recording button
+                const deleteRecordingButton = document.createElement('button');
+                deleteRecordingButton.classList.add('delete-recording-button');
+                deleteRecordingButton.innerHTML = '&times;';
+                deleteRecordingButton.addEventListener('click', () => {
+                    recordingsList.removeChild(recordingItem);
+                });
+
+                recordingItem.appendChild(deleteRecordingButton);
                 recordingItem.appendChild(audio);
                 recordingItem.appendChild(input);
                 recordingItem.appendChild(saveLink);
