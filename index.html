@@ -40,7 +40,7 @@
         #originalText {
             background-color: rgba(255, 255, 255, 0.9);
             color: #000;
-            height: 500px;
+            height: 250px;
             resize: vertical;
             font-size: 18px;
         }
@@ -93,7 +93,7 @@
             padding: 20px;
             border-radius: 5px;
             color: #000;
-            height: 500px;
+            height: 250px;
             overflow-y: auto;
             font-size: 18px;
         }
@@ -151,8 +151,8 @@
         /* Media Queries for Mobile Devices */
         @media (max-width: 767.98px) {
             /* Adjust text area heights */
-            #originalText, #transcribedText, #savedTranscriptions {
-                height: 600px;
+            #originalText, #transcribedText {
+                height: 300px;
                 max-height: none;
                 font-size: 20px;
             }
@@ -211,12 +211,6 @@
         .navbar-custom .nav-link:hover {
             color: #ccc;
         }
-        /* Button description */
-        .button-description {
-            text-align: center;
-            font-size: 14px;
-            color: #fff;
-        }
         /* Recordings List Styles */
         #recordingsList {
             margin-top: 20px;
@@ -248,7 +242,7 @@
         .recording-actions {
             display: flex;
             align-items: center;
-            justify-content: flex-start;
+            justify-content: space-between;
         }
         .recording-actions .delete-recording-button {
             color: #dc3545;
@@ -256,7 +250,6 @@
             background: none;
             border: none;
             font-size: 16px;
-            margin-left: 10px;
         }
         .recording-actions .delete-recording-button:hover {
             text-decoration: underline;
@@ -310,13 +303,10 @@
                     <div id="originalWordCount">Word Count: 0</div>
                 </div>
                 <div id="buttonGroup">
-                    <button id="startButton" class="btn btn-primary">Read Aloud</button>
-                    <div class="button-description">(Transcribe)</div>
+                    <button id="startButton" class="btn btn-primary">Transcribe</button>
                     <button id="recordButton" class="btn btn-danger">Record Reading</button>
                     <button id="resetButton" class="btn btn-secondary">Reset</button>
                 </div>
-                <!-- Recordings List -->
-                <div id="recordingsList"></div>
             </div>
             <!-- Right Column -->
             <div class="col-md-6 col-sm-12 right-column">
@@ -337,6 +327,8 @@
                 </div>
             </div>
         </div>
+        <!-- Moved Recordings List to the bottom -->
+        <div id="recordingsList"></div>
     </div>
     <footer>
         <p>&copy; 2024 Read Aloud App</p>
@@ -404,8 +396,9 @@
             let recorder;
             let stream;
 
-            // Load saved transcriptions from localStorage
+            // Load saved transcriptions and recordings from localStorage
             loadSavedTranscriptions();
+            loadSavedRecordings();
 
             // Update word count for original text
             function updateOriginalWordCount() {
@@ -429,7 +422,7 @@
                         return;
                     }
                     recognition.lang = languageSelect.value;
-                    startButton.textContent = 'Stop Reading Aloud';
+                    startButton.textContent = 'Stop Transcribing';
                     startButton.classList.remove('btn-primary');
                     startButton.classList.add('btn-danger');
                     isReading = true;
@@ -445,7 +438,7 @@
             resetButton.addEventListener('click', () => {
                 originalTextArea.value = '';
                 transcribedDiv.innerHTML = '';
-                startButton.textContent = 'Read Aloud';
+                startButton.textContent = 'Transcribe';
                 startButton.classList.remove('btn-danger');
                 startButton.classList.add('btn-primary');
                 startButton.disabled = false;
@@ -491,7 +484,7 @@
                 if (isReading) {
                     recognition.start();
                 } else {
-                    startButton.textContent = 'Read Aloud';
+                    startButton.textContent = 'Transcribe';
                     startButton.classList.remove('btn-danger');
                     startButton.classList.add('btn-primary');
                     startButton.disabled = false;
@@ -502,7 +495,7 @@
                 if (event.error !== 'aborted') {
                     alert('An error occurred during speech recognition: ' + event.error);
                 }
-                startButton.textContent = 'Read Aloud';
+                startButton.textContent = 'Transcribe';
                 startButton.classList.remove('btn-danger');
                 startButton.classList.add('btn-primary');
                 startButton.disabled = false;
@@ -628,38 +621,63 @@
             }
 
             function saveAudioRecording(blob) {
-                const url = URL.createObjectURL(blob);
+                const reader = new FileReader();
+                reader.onloadend = function() {
+                    const base64data = reader.result;
 
+                    // Create a recording object
+                    const recording = {
+                        dataURL: base64data,
+                        name: 'Recording_' + new Date().toLocaleString().replace(/[\s:\/]/g, '_'),
+                        timestamp: new Date().toLocaleString()
+                    };
+
+                    // Save recording to localStorage
+                    let savedRecordings = JSON.parse(localStorage.getItem('savedRecordings')) || [];
+                    savedRecordings.push(recording);
+                    localStorage.setItem('savedRecordings', JSON.stringify(savedRecordings));
+
+                    // Display the recording
+                    displayRecording(recording);
+                };
+                reader.readAsDataURL(blob);
+            }
+
+            function displayRecording(recording) {
                 const recordingItem = document.createElement('div');
                 recordingItem.classList.add('recording-item');
 
                 const audio = document.createElement('audio');
                 audio.controls = true;
-                audio.src = url;
+                audio.src = recording.dataURL;
 
                 const input = document.createElement('input');
                 input.type = 'text';
-                input.value = 'Recording_' + new Date().toLocaleString().replace(/[\s:\/]/g, '_');
+                input.value = recording.name;
 
                 const actionsDiv = document.createElement('div');
                 actionsDiv.classList.add('recording-actions');
 
                 const saveLink = document.createElement('a');
-                saveLink.href = url;
-                saveLink.download = input.value + '.wav';
+                saveLink.href = recording.dataURL;
+                saveLink.download = recording.name + '.wav';
                 saveLink.textContent = 'Download';
 
                 // Update download link when file name changes
                 input.addEventListener('input', () => {
+                    recording.name = input.value;
                     saveLink.download = input.value + '.wav';
+                    updateRecordingInLocalStorage(recording);
                 });
 
                 // Delete recording button
                 const deleteRecordingButton = document.createElement('button');
                 deleteRecordingButton.classList.add('delete-recording-button');
                 deleteRecordingButton.textContent = 'Delete';
+
                 deleteRecordingButton.addEventListener('click', () => {
                     recordingsList.removeChild(recordingItem);
+                    deleteRecordingFromLocalStorage(recording);
                 });
 
                 actionsDiv.appendChild(saveLink);
@@ -670,6 +688,31 @@
                 recordingItem.appendChild(actionsDiv);
 
                 recordingsList.appendChild(recordingItem);
+            }
+
+            function updateRecordingInLocalStorage(updatedRecording) {
+                let savedRecordings = JSON.parse(localStorage.getItem('savedRecordings')) || [];
+                // Find the recording and update it
+                savedRecordings = savedRecordings.map(recording => {
+                    if (recording.dataURL === updatedRecording.dataURL) {
+                        return updatedRecording;
+                    }
+                    return recording;
+                });
+                localStorage.setItem('savedRecordings', JSON.stringify(savedRecordings));
+            }
+
+            function deleteRecordingFromLocalStorage(recordingToDelete) {
+                let savedRecordings = JSON.parse(localStorage.getItem('savedRecordings')) || [];
+                savedRecordings = savedRecordings.filter(recording => recording.dataURL !== recordingToDelete.dataURL);
+                localStorage.setItem('savedRecordings', JSON.stringify(savedRecordings));
+            }
+
+            function loadSavedRecordings() {
+                const savedRecordings = JSON.parse(localStorage.getItem('savedRecordings')) || [];
+                savedRecordings.forEach(recording => {
+                    displayRecording(recording);
+                });
             }
 
         } else {
