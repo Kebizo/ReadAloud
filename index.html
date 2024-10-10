@@ -44,7 +44,7 @@
             resize: vertical;
             font-size: 18px;
         }
-        #startButton, #resetButton, #recordButton {
+        #startButton, #resetButton, #recordButton, #recordButton2 {
             width: 100%;
             padding: 12px;
             font-size: 18px;
@@ -61,7 +61,7 @@
             background-color: #dc3545;
             color: #fff;
         }
-        #recordButton {
+        #recordButton, #recordButton2 {
             background-color: #5b92f0; /* Blue color */
             color: #fff;
         }
@@ -71,7 +71,7 @@
         #resetButton:hover {
             background-color: #c82333;
         }
-        #recordButton:hover {
+        #recordButton:hover, #recordButton2:hover {
             background-color: #4780d0;
         }
         #selectTextButton {
@@ -93,7 +93,8 @@
             padding: 20px;
             border-radius: 5px;
             color: #000;
-            height: 250px;
+            min-height: 50px;
+            max-height: 500px;
             overflow-y: auto;
             font-size: 18px;
         }
@@ -111,6 +112,21 @@
         }
         #saveButton:hover {
             background-color: #e6c200;
+        }
+        /* Save Text Button Styles */
+        #saveTextButton {
+            width: 100%;
+            padding: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            margin-top: 10px;
+            background-color: #ffa500; /* Orange color */
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+        }
+        #saveTextButton:hover {
+            background-color: #e69500;
         }
         #savedTranscriptions {
             background-color: rgba(255, 255, 255, 0.9);
@@ -131,7 +147,7 @@
         .saved-transcription-item p {
             margin: 0;
         }
-        .delete-button, .delete-recording-button {
+        .delete-button, .delete-recording-button, .delete-saved-text-button {
             background-color: transparent;
             border: none;
             color: #dc3545;
@@ -139,7 +155,7 @@
             line-height: 1;
             cursor: pointer;
         }
-        .delete-button:hover, .delete-recording-button:hover {
+        .delete-button:hover, .delete-recording-button:hover, .delete-saved-text-button:hover {
             color: #bd2130;
             text-decoration: underline;
         }
@@ -168,7 +184,7 @@
             }
 
             /* Adjust button sizes and spacing */
-            #startButton, #resetButton, #saveButton, #selectTextButton, #recordButton {
+            #startButton, #resetButton, #saveButton, #selectTextButton, #recordButton, #recordButton2, #saveTextButton {
                 width: 100%;
                 font-size: 18px;
                 padding: 12px;
@@ -255,6 +271,26 @@
             text-decoration: underline;
             color: #bd2130;
         }
+        /* Saved Texts Styles */
+        .saved-texts-section {
+            margin-top: 30px;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 5px;
+            color: #000;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .saved-text-item {
+            background-color: rgba(255, 165, 0, 0.1);
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            position: relative;
+        }
+        .saved-text-item p {
+            margin: 0;
+        }
     </style>
 </head>
 <body>
@@ -262,6 +298,11 @@
     <nav class="navbar navbar-expand-lg navbar-custom">
         <div class="container">
             <a class="navbar-brand" href="how-to-use.html">How to use this app</a>
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="feedback.html">Feedback</a>
+                </li>
+            </ul>
         </div>
     </nav>
     <div class="container">
@@ -296,16 +337,21 @@
                         <option value="sv-SE">Swedish</option>
                     </select>
                 </div>
-                <button id="selectTextButton" class="btn">Select Podcast Episode</button>
+                <button id="selectTextButton" class="btn">Select Script</button>
                 <div class="form-group">
                     <label for="originalText">Select, type, or paste what you want to read aloud here.</label>
                     <textarea id="originalText" class="form-control" placeholder="Enter text to practice reading aloud"></textarea>
-                    <div id="originalWordCount">Word Count: 0</div>
+                    <div id="originalWordCount">Word/Character Count: 0</div>
                 </div>
+                <button id="saveTextButton" class="btn">Save Text</button>
                 <div id="buttonGroup">
-                    <button id="startButton" class="btn btn-primary">Transcribe</button>
+                    <button id="startButton" class="btn btn-primary">Self-Transcribe</button>
                     <button id="recordButton" class="btn btn-danger">Record Reading</button>
                     <button id="resetButton" class="btn btn-secondary">Reset</button>
+                </div>
+                <div class="saved-texts-section">
+                    <h3>Saved Texts</h3>
+                    <div id="savedTexts"></div>
                 </div>
             </div>
             <!-- Right Column -->
@@ -313,7 +359,7 @@
                 <div class="transcription-section">
                     <h3>Transcription</h3>
                     <div id="transcribedText"></div>
-                    <div id="transcribedWordCount">Word Count: 0</div>
+                    <div id="transcribedWordCount">Word/Character Count: 0</div>
                     <!-- Progress Bar -->
                     <div class="progress mt-3">
                         <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
@@ -325,6 +371,7 @@
                     <div id="savedTranscriptions"></div>
                     <div id="totalWordsRead">Total Words Read: 0</div>
                 </div>
+                <button id="recordButton2" class="btn btn-danger">Record Reading</button>
             </div>
         </div>
         <!-- Moved Recordings List to the bottom -->
@@ -339,13 +386,17 @@
       <div class="modal-dialog">
         <div class="modal-content" style="color: #000;">
           <div class="modal-header">
-            <h5 class="modal-title" id="selectTextModalLabel">Select Podcast Episode</h5>
+            <h5 class="modal-title" id="selectTextModalLabel">Select Script</h5>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
           </div>
           <div class="modal-body">
             <ul class="list-group">
+              <!-- New option -->
+              <li class="list-group-item">
+                <a href="requestscript.html">Request Script</a>
+              </li>
               <!-- List of predefined texts -->
               <li class="list-group-item">
                 <a href="#" class="predefined-text" data-file="1.txt">Shadow English #1 Introduction</a>
@@ -387,8 +438,10 @@
             const originalWordCountDiv = document.getElementById('originalWordCount');
             const transcribedWordCountDiv = document.getElementById('transcribedWordCount');
             const progressBar = document.getElementById('progressBar');
-            const recordButton = document.getElementById('recordButton');
+            const recordButton1 = document.getElementById('recordButton');
+            const recordButton2 = document.getElementById('recordButton2');
             const recordingsList = document.getElementById('recordingsList');
+            const saveTextButton = document.getElementById('saveTextButton');
 
             let isReading = false;
             let finalTranscript = '';
@@ -396,23 +449,38 @@
             let recorder;
             let stream;
 
-            // Load saved transcriptions and recordings from localStorage
+            // Load saved transcriptions, texts, and recordings from localStorage
             loadSavedTranscriptions();
+            loadSavedTexts();
             loadSavedRecordings();
 
             // Update word count for original text
             function updateOriginalWordCount() {
                 const text = originalTextArea.value.trim();
-                const words = text.split(/\s+/).filter(word => word.length > 0);
-                originalWordCountDiv.textContent = `Word Count: ${words.length}`;
-                originalTextWords = words;
+                let count = 0;
+                if (languageSelect.value === 'ja-JP' || languageSelect.value === 'zh-CN' || languageSelect.value === 'ko-KR') {
+                    // For languages without spaces, count characters excluding whitespace
+                    count = text.replace(/\s/g, '').length;
+                } else {
+                    const words = text.split(/\s+/).filter(word => word.length > 0);
+                    count = words.length;
+                }
+                originalWordCountDiv.textContent = `Word/Character Count: ${count}`;
+                originalTextWords = text; // For progress bar calculation
             }
 
             originalTextArea.addEventListener('input', updateOriginalWordCount);
 
             function updateTranscribedWordCount() {
-                const words = finalTranscript.trim().split(/\s+/).filter(word => word.length > 0);
-                transcribedWordCountDiv.textContent = `Word Count: ${words.length}`;
+                const text = finalTranscript.trim();
+                let count = 0;
+                if (languageSelect.value === 'ja-JP' || languageSelect.value === 'zh-CN' || languageSelect.value === 'ko-KR') {
+                    count = text.replace(/\s/g, '').length;
+                } else {
+                    const words = text.split(/\s+/).filter(word => word.length > 0);
+                    count = words.length;
+                }
+                transcribedWordCountDiv.textContent = `Word/Character Count: ${count}`;
             }
 
             startButton.addEventListener('click', () => {
@@ -438,7 +506,7 @@
             resetButton.addEventListener('click', () => {
                 originalTextArea.value = '';
                 transcribedDiv.innerHTML = '';
-                startButton.textContent = 'Transcribe';
+                startButton.textContent = 'Self-Transcribe';
                 startButton.classList.remove('btn-danger');
                 startButton.classList.add('btn-primary');
                 startButton.disabled = false;
@@ -446,8 +514,9 @@
                 recognition.abort();
                 finalTranscript = '';
                 progressBar.style.width = '0%';
-                originalWordCountDiv.textContent = '';
-                transcribedWordCountDiv.textContent = '';
+                originalWordCountDiv.textContent = 'Word/Character Count: 0';
+                transcribedWordCountDiv.textContent = 'Word/Character Count: 0';
+                transcribedDiv.style.height = '';
                 // Do not clear audio recordings
             });
 
@@ -456,13 +525,21 @@
                     alert('There is no transcription to save.');
                     return;
                 }
-                const wordCount = finalTranscript.trim().split(/\s+/).filter(word => word.length > 0).length;
-                saveTranscription(finalTranscript, wordCount);
-                alert(`Congratulations, you just read ${wordCount} words aloud!`);
+                let count = 0;
+                const text = finalTranscript.trim();
+                if (languageSelect.value === 'ja-JP' || languageSelect.value === 'zh-CN' || languageSelect.value === 'ko-KR') {
+                    count = text.replace(/\s/g, '').length;
+                } else {
+                    const words = text.split(/\s+/).filter(word => word.length > 0);
+                    count = words.length;
+                }
+                saveTranscription(finalTranscript, count);
+                alert(`Congratulations, you just read ${count} words/characters aloud!`);
                 finalTranscript = '';
                 transcribedDiv.innerHTML = '';
                 progressBar.style.width = '0%';
-                transcribedWordCountDiv.textContent = '';
+                transcribedWordCountDiv.textContent = 'Word/Character Count: 0';
+                transcribedDiv.style.height = '';
             });
 
             recognition.addEventListener('result', (event) => {
@@ -476,6 +553,7 @@
                     }
                 }
                 transcribedDiv.innerHTML = `<p>${finalTranscript}${interimTranscript}</p>`;
+                transcribedDiv.style.height = 'auto';
                 updateTranscribedWordCount();
                 updateProgress();
             });
@@ -484,7 +562,7 @@
                 if (isReading) {
                     recognition.start();
                 } else {
-                    startButton.textContent = 'Transcribe';
+                    startButton.textContent = 'Self-Transcribe';
                     startButton.classList.remove('btn-danger');
                     startButton.classList.add('btn-primary');
                     startButton.disabled = false;
@@ -495,7 +573,7 @@
                 if (event.error !== 'aborted') {
                     alert('An error occurred during speech recognition: ' + event.error);
                 }
-                startButton.textContent = 'Transcribe';
+                startButton.textContent = 'Self-Transcribe';
                 startButton.classList.remove('btn-danger');
                 startButton.classList.add('btn-primary');
                 startButton.disabled = false;
@@ -549,8 +627,23 @@
             }
 
             function updateProgress() {
-                const transcribedWords = finalTranscript.trim().split(/\s+/).filter(word => word.length > 0);
-                const progress = Math.min((transcribedWords.length / originalTextWords.length) * 100, 100);
+                let originalCount = 0;
+                if (languageSelect.value === 'ja-JP' || languageSelect.value === 'zh-CN' || languageSelect.value === 'ko-KR') {
+                    originalCount = originalTextWords.replace(/\s/g, '').length;
+                } else {
+                    const words = originalTextWords.split(/\s+/).filter(word => word.length > 0);
+                    originalCount = words.length;
+                }
+
+                let transcribedCount = 0;
+                if (languageSelect.value === 'ja-JP' || languageSelect.value === 'zh-CN' || languageSelect.value === 'ko-KR') {
+                    transcribedCount = finalTranscript.replace(/\s/g, '').length;
+                } else {
+                    const words = finalTranscript.trim().split(/\s+/).filter(word => word.length > 0);
+                    transcribedCount = words.length;
+                }
+
+                const progress = Math.min((transcribedCount / originalCount) * 100, 100);
                 progressBar.style.width = `${progress}%`;
                 progressBar.setAttribute('aria-valuenow', progress);
             }
@@ -579,15 +672,18 @@
             });
 
             // Recording functionality using RecordRTC
-            recordButton.addEventListener('click', () => {
-                if (recordButton.textContent === 'Record Reading') {
-                    startRecording();
-                } else {
-                    stopRecording();
-                }
+            const recordButtons = [recordButton1, recordButton2];
+            recordButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    if (button.textContent === 'Record Reading') {
+                        startRecording(button);
+                    } else {
+                        stopRecording(button);
+                    }
+                });
             });
 
-            function startRecording() {
+            function startRecording(button) {
                 navigator.mediaDevices.getUserMedia({ audio: true })
                     .then(s => {
                         stream = s;
@@ -597,9 +693,9 @@
                             desiredSampRate: 16000,
                         });
                         recorder.startRecording();
-                        recordButton.textContent = 'Stop Recording';
-                        recordButton.classList.remove('btn-danger');
-                        recordButton.classList.add('btn-warning');
+                        button.textContent = 'Stop Recording';
+                        button.classList.remove('btn-danger');
+                        button.classList.add('btn-warning');
                     })
                     .catch(error => {
                         console.error('Error accessing microphone:', error);
@@ -607,7 +703,7 @@
                     });
             }
 
-            function stopRecording() {
+            function stopRecording(button) {
                 recorder.stopRecording(() => {
                     const blob = recorder.getBlob();
                     saveAudioRecording(blob);
@@ -615,12 +711,17 @@
                     recorder.destroy();
                     recorder = null;
                 });
-                recordButton.textContent = 'Record Reading';
-                recordButton.classList.remove('btn-warning');
-                recordButton.classList.add('btn-danger');
+                button.textContent = 'Record Reading';
+                button.classList.remove('btn-warning');
+                button.classList.add('btn-danger');
             }
 
             function saveAudioRecording(blob) {
+                if (blob.size > 5 * 1024 * 1024) { // 5MB limit
+                    alert('Recording is too large to be saved. Please download it instead.');
+                    displayRecording({ dataURL: URL.createObjectURL(blob), name: 'Recording_' + new Date().toLocaleString().replace(/[\s:\/]/g, '_'), timestamp: new Date().toLocaleString(), blob: blob });
+                    return;
+                }
                 const reader = new FileReader();
                 reader.onloadend = function() {
                     const base64data = reader.result;
@@ -663,21 +764,23 @@
                 saveLink.download = recording.name + '.wav';
                 saveLink.textContent = 'Download';
 
-                // Update download link when file name changes
                 input.addEventListener('input', () => {
                     recording.name = input.value;
                     saveLink.download = input.value + '.wav';
-                    updateRecordingInLocalStorage(recording);
+                    if (recording.dataURL.startsWith('data:')) {
+                        updateRecordingInLocalStorage(recording);
+                    }
                 });
 
-                // Delete recording button
                 const deleteRecordingButton = document.createElement('button');
                 deleteRecordingButton.classList.add('delete-recording-button');
                 deleteRecordingButton.textContent = 'Delete';
 
                 deleteRecordingButton.addEventListener('click', () => {
                     recordingsList.removeChild(recordingItem);
-                    deleteRecordingFromLocalStorage(recording);
+                    if (recording.dataURL.startsWith('data:')) {
+                        deleteRecordingFromLocalStorage(recording);
+                    }
                 });
 
                 actionsDiv.appendChild(saveLink);
@@ -713,6 +816,65 @@
                 savedRecordings.forEach(recording => {
                     displayRecording(recording);
                 });
+            }
+
+            saveTextButton.addEventListener('click', () => {
+                if (originalTextArea.value.trim() === '') {
+                    alert('Please enter some text to save.');
+                    return;
+                }
+                const textToSave = originalTextArea.value.trim();
+                let count = 0;
+                if (languageSelect.value === 'ja-JP' || languageSelect.value === 'zh-CN' || languageSelect.value === 'ko-KR') {
+                    count = textToSave.replace(/\s/g, '').length;
+                } else {
+                    const words = textToSave.split(/\s+/).filter(word => word.length > 0);
+                    count = words.length;
+                }
+                saveText(textToSave, count);
+            });
+
+            function saveText(text, count) {
+                let savedTexts = JSON.parse(localStorage.getItem('savedTexts')) || [];
+                const timestamp = new Date().toLocaleString();
+                savedTexts.push({ timestamp, text, count });
+                localStorage.setItem('savedTexts', JSON.stringify(savedTexts));
+                displaySavedTexts();
+            }
+
+            function loadSavedTexts() {
+                displaySavedTexts();
+            }
+
+            function displaySavedTexts() {
+                const savedTexts = JSON.parse(localStorage.getItem('savedTexts')) || [];
+                const savedTextsDiv = document.getElementById('savedTexts');
+                savedTextsDiv.innerHTML = '';
+                savedTexts.reverse().forEach((item, index) => {
+                    const div = document.createElement('div');
+                    div.classList.add('saved-text-item');
+                    div.innerHTML = `
+                        <p><strong>${item.timestamp}</strong> | Word/Character Count: ${item.count}</p>
+                        <p>${item.text}</p>
+                        <button class="delete-saved-text-button" data-index="${index}">Delete</button>
+                    `;
+                    savedTextsDiv.appendChild(div);
+                });
+
+                const deleteButtons = savedTextsDiv.querySelectorAll('.delete-saved-text-button');
+                deleteButtons.forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const index = e.target.getAttribute('data-index');
+                        deleteSavedText(index);
+                    });
+                });
+            }
+
+            function deleteSavedText(index) {
+                let savedTexts = JSON.parse(localStorage.getItem('savedTexts')) || [];
+                savedTexts.splice(savedTexts.length - 1 - index, 1);
+                localStorage.setItem('savedTexts', JSON.stringify(savedTexts));
+                displaySavedTexts();
             }
 
         } else {
