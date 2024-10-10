@@ -369,7 +369,7 @@
                 <div class="saved-transcriptions-section">
                     <h3>Saved Transcriptions</h3>
                     <div id="savedTranscriptions"></div>
-                    <div id="totalWordsRead">Total Words/Characters Read: 0</div>
+                    <div id="totalWordsRead">Total Words Read: 0</div>
                 </div>
                 <button id="recordButton2" class="btn btn-danger">Record Reading</button>
             </div>
@@ -445,7 +445,7 @@
 
             let isReading = false;
             let finalTranscript = '';
-            let originalTextContent = '';
+            let originalTextWords = [];
             let recorder;
             let stream;
 
@@ -457,56 +457,30 @@
             // Update word count for original text
             function updateOriginalWordCount() {
                 const text = originalTextArea.value.trim();
-                let wordCount = 0;
-                let characterCount = 0;
-
-                // Regular expressions for word counting
-                const wordRegex = /\b\w+\b/g;
-                const cjkRegex = /[\u3040-\u30FF\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF]/g; // Japanese Hiragana, Katakana, Kanji ranges
-
-                // Count words
-                const words = text.match(wordRegex);
-                if (words) {
-                    wordCount = words.length;
+                let count = 0;
+                if (languageSelect.value === 'ja-JP' || languageSelect.value === 'zh-CN' || languageSelect.value === 'ko-KR') {
+                    // For languages without spaces, count characters excluding whitespace
+                    count = text.replace(/\s/g, '').length;
+                } else {
+                    const words = text.split(/\s+/).filter(word => word.length > 0);
+                    count = words.length;
                 }
-
-                // Count CJK characters
-                const cjkCharacters = text.match(cjkRegex);
-                if (cjkCharacters) {
-                    characterCount = cjkCharacters.length;
-                }
-
-                const totalCount = wordCount + characterCount;
-
-                originalWordCountDiv.textContent = `Word/Character Count: ${totalCount}`;
-
-                // Store text for progress calculation
-                originalTextContent = text;
+                originalWordCountDiv.textContent = `Word/Character Count: ${count}`;
+                originalTextWords = text; // For progress bar calculation
             }
 
             originalTextArea.addEventListener('input', updateOriginalWordCount);
 
             function updateTranscribedWordCount() {
                 const text = finalTranscript.trim();
-                let wordCount = 0;
-                let characterCount = 0;
-
-                const wordRegex = /\b\w+\b/g;
-                const cjkRegex = /[\u3040-\u30FF\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF]/g;
-
-                const words = text.match(wordRegex);
-                if (words) {
-                    wordCount = words.length;
+                let count = 0;
+                if (languageSelect.value === 'ja-JP' || languageSelect.value === 'zh-CN' || languageSelect.value === 'ko-KR') {
+                    count = text.replace(/\s/g, '').length;
+                } else {
+                    const words = text.split(/\s+/).filter(word => word.length > 0);
+                    count = words.length;
                 }
-
-                const cjkCharacters = text.match(cjkRegex);
-                if (cjkCharacters) {
-                    characterCount = cjkCharacters.length;
-                }
-
-                const totalCount = wordCount + characterCount;
-
-                transcribedWordCountDiv.textContent = `Word/Character Count: ${totalCount}`;
+                transcribedWordCountDiv.textContent = `Word/Character Count: ${count}`;
             }
 
             startButton.addEventListener('click', () => {
@@ -551,27 +525,16 @@
                     alert('There is no transcription to save.');
                     return;
                 }
-                let wordCount = 0;
-                let characterCount = 0;
+                let count = 0;
                 const text = finalTranscript.trim();
-
-                const wordRegex = /\b\w+\b/g;
-                const cjkRegex = /[\u3040-\u30FF\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF]/g;
-
-                const words = text.match(wordRegex);
-                if (words) {
-                    wordCount = words.length;
+                if (languageSelect.value === 'ja-JP' || languageSelect.value === 'zh-CN' || languageSelect.value === 'ko-KR') {
+                    count = text.replace(/\s/g, '').length;
+                } else {
+                    const words = text.split(/\s+/).filter(word => word.length > 0);
+                    count = words.length;
                 }
-
-                const cjkCharacters = text.match(cjkRegex);
-                if (cjkCharacters) {
-                    characterCount = cjkCharacters.length;
-                }
-
-                const totalCount = wordCount + characterCount;
-
-                saveTranscription(finalTranscript, totalCount);
-                alert(`Congratulations, you just read ${totalCount} words/characters aloud!`);
+                saveTranscription(finalTranscript, count);
+                alert(`Congratulations, you just read ${count} words/characters aloud!`);
                 finalTranscript = '';
                 transcribedDiv.innerHTML = '';
                 progressBar.style.width = '0%';
@@ -617,10 +580,10 @@
                 isReading = false;
             });
 
-            function saveTranscription(transcription, totalCount) {
+            function saveTranscription(transcription, wordCount) {
                 let savedTranscriptions = JSON.parse(localStorage.getItem('savedTranscriptions')) || [];
                 const timestamp = new Date().toLocaleString();
-                savedTranscriptions.push({ timestamp, transcription, totalCount });
+                savedTranscriptions.push({ timestamp, transcription, wordCount });
                 localStorage.setItem('savedTranscriptions', JSON.stringify(savedTranscriptions));
                 displaySavedTranscriptions();
             }
@@ -634,18 +597,18 @@
                 savedTranscriptionsDiv.innerHTML = '';
                 let totalWordsRead = 0;
                 savedTranscriptions.reverse().forEach((item, index) => {
-                    totalWordsRead += item.totalCount || 0;
+                    totalWordsRead += item.wordCount || 0;
                     const div = document.createElement('div');
                     div.classList.add('saved-transcription-item');
                     div.innerHTML = `
-                        <p><strong>${item.timestamp}</strong> | Words/Characters Read: ${item.totalCount}</p>
+                        <p><strong>${item.timestamp}</strong> | Words Read: ${item.wordCount}</p>
                         <p>${item.transcription}</p>
                         <button class="delete-button" data-index="${index}">Delete</button>
                     `;
                     savedTranscriptionsDiv.appendChild(div);
                 });
                 const totalWordsReadDiv = document.getElementById('totalWordsRead');
-                totalWordsReadDiv.textContent = `Total Words/Characters Read: ${totalWordsRead}`;
+                totalWordsReadDiv.textContent = `Total Words Read: ${totalWordsRead}`;
 
                 const deleteButtons = savedTranscriptionsDiv.querySelectorAll('.delete-button');
                 deleteButtons.forEach(button => {
@@ -665,38 +628,254 @@
 
             function updateProgress() {
                 let originalCount = 0;
+                if (languageSelect.value === 'ja-JP' || languageSelect.value === 'zh-CN' || languageSelect.value === 'ko-KR') {
+                    originalCount = originalTextWords.replace(/\s/g, '').length;
+                } else {
+                    const words = originalTextWords.split(/\s+/).filter(word => word.length > 0);
+                    originalCount = words.length;
+                }
+
                 let transcribedCount = 0;
-
-                const wordRegex = /\b\w+\b/g;
-                const cjkRegex = /[\u3040-\u30FF\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF]/g;
-
-                // Original Text Count
-                let words = originalTextContent.match(wordRegex);
-                if (words) {
-                    originalCount += words.length;
-                }
-                let cjkCharacters = originalTextContent.match(cjkRegex);
-                if (cjkCharacters) {
-                    originalCount += cjkCharacters.length;
+                if (languageSelect.value === 'ja-JP' || languageSelect.value === 'zh-CN' || languageSelect.value === 'ko-KR') {
+                    transcribedCount = finalTranscript.replace(/\s/g, '').length;
+                } else {
+                    const words = finalTranscript.trim().split(/\s+/).filter(word => word.length > 0);
+                    transcribedCount = words.length;
                 }
 
-                // Transcribed Text Count
-                words = finalTranscript.match(wordRegex);
-                if (words) {
-                    transcribedCount += words.length;
-                }
-                cjkCharacters = finalTranscript.match(cjkRegex);
-                if (cjkCharacters) {
-                    transcribedCount += cjkCharacters.length;
-                }
-
-                const progress = originalCount > 0 ? Math.min((transcribedCount / originalCount) * 100, 100) : 0;
+                const progress = Math.min((transcribedCount / originalCount) * 100, 100);
                 progressBar.style.width = `${progress}%`;
                 progressBar.setAttribute('aria-valuenow', progress);
             }
 
-            // The rest of your existing code remains unchanged
-            // ...
+            selectTextButton.addEventListener('click', () => {
+                $('#selectTextModal').modal('show');
+            });
+
+            const predefinedTexts = document.querySelectorAll('.predefined-text');
+            predefinedTexts.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const file = link.getAttribute('data-file');
+                    fetch(file)
+                        .then(response => response.text())
+                        .then(data => {
+                            originalTextArea.value = data;
+                            $('#selectTextModal').modal('hide');
+                            updateOriginalWordCount();
+                        })
+                        .catch(error => {
+                            console.error('Error fetching text:', error);
+                            alert('An error occurred while fetching the text.');
+                        });
+                });
+            });
+
+            // Recording functionality using RecordRTC
+            const recordButtons = [recordButton1, recordButton2];
+            recordButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    if (button.textContent === 'Record Reading') {
+                        startRecording(button);
+                    } else {
+                        stopRecording(button);
+                    }
+                });
+            });
+
+            function startRecording(button) {
+                navigator.mediaDevices.getUserMedia({ audio: true })
+                    .then(s => {
+                        stream = s;
+                        recorder = RecordRTC(stream, {
+                            type: 'audio',
+                            mimeType: 'audio/wav',
+                            desiredSampRate: 16000,
+                        });
+                        recorder.startRecording();
+                        button.textContent = 'Stop Recording';
+                        button.classList.remove('btn-danger');
+                        button.classList.add('btn-warning');
+                    })
+                    .catch(error => {
+                        console.error('Error accessing microphone:', error);
+                        alert('An error occurred while accessing the microphone. Please ensure you have granted microphone access in your browser settings.');
+                    });
+            }
+
+            function stopRecording(button) {
+                recorder.stopRecording(() => {
+                    const blob = recorder.getBlob();
+                    saveAudioRecording(blob);
+                    stream.getTracks().forEach(track => track.stop());
+                    recorder.destroy();
+                    recorder = null;
+                });
+                button.textContent = 'Record Reading';
+                button.classList.remove('btn-warning');
+                button.classList.add('btn-danger');
+            }
+
+            function saveAudioRecording(blob) {
+                if (blob.size > 5 * 1024 * 1024) { // 5MB limit
+                    alert('Recording is too large to be saved. Please download it instead.');
+                    displayRecording({ dataURL: URL.createObjectURL(blob), name: 'Recording_' + new Date().toLocaleString().replace(/[\s:\/]/g, '_'), timestamp: new Date().toLocaleString(), blob: blob });
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onloadend = function() {
+                    const base64data = reader.result;
+
+                    // Create a recording object
+                    const recording = {
+                        dataURL: base64data,
+                        name: 'Recording_' + new Date().toLocaleString().replace(/[\s:\/]/g, '_'),
+                        timestamp: new Date().toLocaleString()
+                    };
+
+                    // Save recording to localStorage
+                    let savedRecordings = JSON.parse(localStorage.getItem('savedRecordings')) || [];
+                    savedRecordings.push(recording);
+                    localStorage.setItem('savedRecordings', JSON.stringify(savedRecordings));
+
+                    // Display the recording
+                    displayRecording(recording);
+                };
+                reader.readAsDataURL(blob);
+            }
+
+            function displayRecording(recording) {
+                const recordingItem = document.createElement('div');
+                recordingItem.classList.add('recording-item');
+
+                const audio = document.createElement('audio');
+                audio.controls = true;
+                audio.src = recording.dataURL;
+
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = recording.name;
+
+                const actionsDiv = document.createElement('div');
+                actionsDiv.classList.add('recording-actions');
+
+                const saveLink = document.createElement('a');
+                saveLink.href = recording.dataURL;
+                saveLink.download = recording.name + '.wav';
+                saveLink.textContent = 'Download';
+
+                input.addEventListener('input', () => {
+                    recording.name = input.value;
+                    saveLink.download = input.value + '.wav';
+                    if (recording.dataURL.startsWith('data:')) {
+                        updateRecordingInLocalStorage(recording);
+                    }
+                });
+
+                const deleteRecordingButton = document.createElement('button');
+                deleteRecordingButton.classList.add('delete-recording-button');
+                deleteRecordingButton.textContent = 'Delete';
+
+                deleteRecordingButton.addEventListener('click', () => {
+                    recordingsList.removeChild(recordingItem);
+                    if (recording.dataURL.startsWith('data:')) {
+                        deleteRecordingFromLocalStorage(recording);
+                    }
+                });
+
+                actionsDiv.appendChild(saveLink);
+                actionsDiv.appendChild(deleteRecordingButton);
+
+                recordingItem.appendChild(audio);
+                recordingItem.appendChild(input);
+                recordingItem.appendChild(actionsDiv);
+
+                recordingsList.appendChild(recordingItem);
+            }
+
+            function updateRecordingInLocalStorage(updatedRecording) {
+                let savedRecordings = JSON.parse(localStorage.getItem('savedRecordings')) || [];
+                // Find the recording and update it
+                savedRecordings = savedRecordings.map(recording => {
+                    if (recording.dataURL === updatedRecording.dataURL) {
+                        return updatedRecording;
+                    }
+                    return recording;
+                });
+                localStorage.setItem('savedRecordings', JSON.stringify(savedRecordings));
+            }
+
+            function deleteRecordingFromLocalStorage(recordingToDelete) {
+                let savedRecordings = JSON.parse(localStorage.getItem('savedRecordings')) || [];
+                savedRecordings = savedRecordings.filter(recording => recording.dataURL !== recordingToDelete.dataURL);
+                localStorage.setItem('savedRecordings', JSON.stringify(savedRecordings));
+            }
+
+            function loadSavedRecordings() {
+                const savedRecordings = JSON.parse(localStorage.getItem('savedRecordings')) || [];
+                savedRecordings.forEach(recording => {
+                    displayRecording(recording);
+                });
+            }
+
+            saveTextButton.addEventListener('click', () => {
+                if (originalTextArea.value.trim() === '') {
+                    alert('Please enter some text to save.');
+                    return;
+                }
+                const textToSave = originalTextArea.value.trim();
+                let count = 0;
+                if (languageSelect.value === 'ja-JP' || languageSelect.value === 'zh-CN' || languageSelect.value === 'ko-KR') {
+                    count = textToSave.replace(/\s/g, '').length;
+                } else {
+                    const words = textToSave.split(/\s+/).filter(word => word.length > 0);
+                    count = words.length;
+                }
+                saveText(textToSave, count);
+            });
+
+            function saveText(text, count) {
+                let savedTexts = JSON.parse(localStorage.getItem('savedTexts')) || [];
+                const timestamp = new Date().toLocaleString();
+                savedTexts.push({ timestamp, text, count });
+                localStorage.setItem('savedTexts', JSON.stringify(savedTexts));
+                displaySavedTexts();
+            }
+
+            function loadSavedTexts() {
+                displaySavedTexts();
+            }
+
+            function displaySavedTexts() {
+                const savedTexts = JSON.parse(localStorage.getItem('savedTexts')) || [];
+                const savedTextsDiv = document.getElementById('savedTexts');
+                savedTextsDiv.innerHTML = '';
+                savedTexts.reverse().forEach((item, index) => {
+                    const div = document.createElement('div');
+                    div.classList.add('saved-text-item');
+                    div.innerHTML = `
+                        <p><strong>${item.timestamp}</strong> | Word/Character Count: ${item.count}</p>
+                        <p>${item.text}</p>
+                        <button class="delete-saved-text-button" data-index="${index}">Delete</button>
+                    `;
+                    savedTextsDiv.appendChild(div);
+                });
+
+                const deleteButtons = savedTextsDiv.querySelectorAll('.delete-saved-text-button');
+                deleteButtons.forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const index = e.target.getAttribute('data-index');
+                        deleteSavedText(index);
+                    });
+                });
+            }
+
+            function deleteSavedText(index) {
+                let savedTexts = JSON.parse(localStorage.getItem('savedTexts')) || [];
+                savedTexts.splice(savedTexts.length - 1 - index, 1);
+                localStorage.setItem('savedTexts', JSON.stringify(savedTexts));
+                displaySavedTexts();
+            }
 
         } else {
             alert('Sorry, your browser does not support speech recognition.');
